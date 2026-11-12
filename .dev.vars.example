@@ -1,0 +1,3 @@
+# Copiar a .dev.vars (ignorado por git). Solo para `wrangler dev`; en producción son secrets del Worker.
+ADMIN_PASSWORD=cambiar-esta-contraseña
+ADMIN_SECRET=cadena-larga-al-azar-generada-con-openssl-rand-hex-32

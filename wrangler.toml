@@ -1,0 +1,24 @@
+# QualityPro v2 — Cloudflare (Workers + D1 + R2)
+name = "qualitypro-v2"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "7a7a6f232ae4f5a5b3963b25b0894388"
+routes = [{ pattern = "qualitypro-v2.asiquedo.cl", custom_domain = true }]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "qualitypro-v2"
+database_id = "e04e09a2-cd53-4d0e-8cb6-f0817994d1a0"
+migrations_dir = "db/migrations"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "qualitypro-v2-media"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+SITE_URL = "https://qualitypro-v2.asiquedo.cl"

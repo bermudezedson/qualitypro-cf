@@ -1,0 +1,22 @@
+{
+	"name": "qualitypro-v2",
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"check": "tsc --noEmit",
+		"fragmentos": "node scripts/extraer-fragmentos.mjs",
+		"db:schema": "wrangler d1 execute qualitypro-v2 --remote --file db/migrations/0001_esquema_inicial.sql",
+		"db:seed": "wrangler d1 execute qualitypro-v2 --remote --file db/seed-desde-mysql-2026-11-12.sql"
+	},
+	"type": "module",
+	"devDependencies": {
+		"@cloudflare/workers-types": "^5.20261112.1",
+		"typescript": "^7.0.2",
+		"wrangler": "^4.160.1"
+	},
+	"dependencies": {
+		"hono": "^4.13.18"
+	},
+	"private": true
+}
