@@ -102,7 +102,8 @@
   var grid = document.querySelector("[data-catalog-grid]");
   if (grid) {
     var params = new URLSearchParams(location.search);
-    var categoria = params.get("categoria") || "";
+    var rutaCat = location.pathname.match(/^\/catalogo\/([a-z0-9-]+)/);
+    var categoria = (rutaCat ? rutaCat[1] : params.get("categoria")) || "";
     var q = params.get("q") || "";
     if (CAT_NAMES[categoria] === undefined) categoria = "";
     var matching = {};

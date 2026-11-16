@@ -9,6 +9,14 @@ import { normalizar, ordenarCategorias } from './db';
 import { esc, jsonScript } from './html';
 
 const F = frag as unknown as Record<string, string> & { iconosCategoria: Record<string, string> };
+// URLs limpias de categoría: la plantilla enlaza /catalogo?categoria=<slug>; el sitio usa /catalogo/<slug>
+for (const k of Object.keys(F)) if (typeof F[k] === 'string') F[k] = F[k].split('/catalogo?categoria=').join('/catalogo/');
+
+/** Título de categoría para H1, <title> y migas: "Productos para aves", "Productos de higiene". */
+export function tituloCategoria(c: Categoria): string {
+	return c.slug === 'higiene' ? 'Productos de higiene y sanitización' : `Productos para ${c.animal.toLowerCase()}`;
+}
+export const OG_IMAGEN_DEFECTO = '/assets/campo-vacas.jpg';
 
 /** Codepoints de la fuente de íconos "qualitypro" por especie (tomados del diseño). */
 const ICONO: Record<string, string> = {
@@ -106,7 +114,7 @@ ${meta.noindex ? '<meta name="robots" content="noindex, follow">' : ''}
 <meta property="og:url" content="${esc(canonical)}">
 <meta property="og:site_name" content="Quality Pro">
 <meta property="og:locale" content="es_CL">
-${og.imagen ? `<meta property="og:image" content="${esc(og.imagen)}">` : ''}
+<meta property="og:image" content="${esc(og.imagen ?? siteUrl + OG_IMAGEN_DEFECTO)}">
 <meta name="theme-color" content="#0b2545">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,7 +142,7 @@ function cabecera(cat: Catalogo): string {
 
 function pie(cat: Catalogo): string {
 	// Lista de especies del footer desde la base de datos (mismo markup que el diseño).
-	const items = cat.categorias.map((c) => `<li><a href="/catalogo?categoria=${esc(c.slug)}">${esc(c.animal)}</a></li>`).join('');
+	const items = cat.categorias.map((c) => `<li><a href="/catalogo/${esc(c.slug)}">${esc(c.animal)}</a></li>`).join('');
 	return F.pie
 		.replace(/(<ul class="grid grid-cols-2 gap-1\.5 text-sm text-navy-foreground\/80">)[\s\S]*?(<\/ul>)/, `$1${items}$2`)
 		.replace(/data-year>\d+</, `data-year>${new Date().getFullYear()}<`);
@@ -168,7 +176,7 @@ export function tarjetaProducto(p: Producto, posicion?: number, categoriaActiva?
 
 export function azulejoCategoria(c: Categoria): string {
 	const tam = c.slug === 'peces' ? 'text-[43.2px]' : 'text-5xl';
-	return `<a href="/catalogo?categoria=${esc(c.slug)}" class="category-tile group flex min-h-32 min-w-0 flex-col items-center justify-center gap-3 rounded-md border border-border bg-card px-2 py-4 transition-colors hover:border-primary hover:bg-secondary"><span class="qp-icon ${tam} text-primary transition-colors group-hover:text-whatsapp">${ICONO[c.slug] ?? '&#xe90a;'}</span><span class="text-center text-xs font-bold text-navy sm:text-sm">${esc(c.animal)}</span></a>`;
+	return `<a href="/catalogo/${esc(c.slug)}" class="category-tile group flex min-h-32 min-w-0 flex-col items-center justify-center gap-3 rounded-md border border-border bg-card px-2 py-4 transition-colors hover:border-primary hover:bg-secondary"><span class="qp-icon ${tam} text-primary transition-colors group-hover:text-whatsapp">${ICONO[c.slug] ?? '&#xe90a;'}</span><span class="text-center text-xs font-bold text-navy sm:text-sm">${esc(c.animal)}</span></a>`;
 }
 
 // ---------------------------------------------------------------- páginas
@@ -194,17 +202,19 @@ export function paginaCatalogo(cat: Catalogo, categoria: Categoria | null, q: st
 		if (fondo) hero = hero.replace(/src="\/assets\/[^"]+"/, `src="/assets/${fondo}"`);
 		hero = hero.replace(/style="object-position: [^"]+"/, `style="object-position: ${FOCO_CATALOGO[categoria.slug] ?? 'right center'}"`);
 		hero = hero.replace('<span>Catálogo</span>', `<a href="/catalogo">Catálogo</a>${SVG_CHEVRON}<span>${esc(categoria.animal)}</span>`);
+		hero = hero.replace(/(<h1[^>]*>)[^<]*(<\/h1>)/, `$1${esc(tituloCategoria(categoria))}$2`);
+		if (categoria.descripcion?.trim()) hero = hero.replace(/(<p class="mt-3 text-sm text-navy-foreground\/80">)[^<]*(<\/p>)/, `$1${esc(categoria.descripcion.trim())}$2`);
 	}
 
 	// Aside de categorías
-	const qs = q ? `&q=${encodeURIComponent(q)}` : '';
+	const qs = q ? `?q=${encodeURIComponent(q)}` : '';
 	const todosActivo = !categoria;
 	const enlaces = [
 		`<a href="/catalogo${q ? `?q=${encodeURIComponent(q)}` : ''}" class="shrink-0 rounded-md px-3 py-3 text-sm font-semibold ${todosActivo ? 'bg-primary text-primary-foreground' : 'bg-card text-navy'}" data-cat-link="">Todos los productos</a>`,
 		...cat.categorias.map((c) => {
 			const activo = categoria?.slug === c.slug;
 			const icono = F.iconosCategoria[c.slug] ?? `<span class="flex h-7 w-8 shrink-0 items-center justify-center qp-icon text-2xl" aria-hidden="true">${ICONO[c.slug] ?? '&#xe90a;'}</span>`;
-			return `<a href="/catalogo?categoria=${esc(c.slug)}${qs}" class="flex shrink-0 items-center gap-3 rounded-md px-3 py-3 text-sm font-medium ${activo ? 'bg-primary text-primary-foreground' : 'text-navy hover:bg-secondary'}" data-cat-link="${esc(c.slug)}">${icono}${esc(c.animal)}</a>`;
+			return `<a href="/catalogo/${esc(c.slug)}${qs}" class="flex shrink-0 items-center gap-3 rounded-md px-3 py-3 text-sm font-medium ${activo ? 'bg-primary text-primary-foreground' : 'text-navy hover:bg-secondary'}" data-cat-link="${esc(c.slug)}">${icono}${esc(c.animal)}</a>`;
 		})
 	].join('\n    ');
 	const aside = `${F.catalogoAsideTitulo}<nav class="flex gap-2 overflow-x-auto pb-3 md:flex-col" data-cat-nav>\n    ${enlaces}\n  </nav></aside>`;
@@ -242,7 +252,7 @@ export function paginaProducto(d: DatosProducto): string {
 	const chips = p.categorias
 		.map(
 			(c) =>
-				`<a href="/catalogo?categoria=${esc(c.slug)}" class="flex items-center gap-2 rounded-sm bg-secondary px-3 py-2 text-xs font-semibold text-primary"><span class="qp-icon text-xl">${ICONO[c.slug] ?? '&#xe90a;'}</span>${esc(c.animal)}</a>`
+				`<a href="/catalogo/${esc(c.slug)}" class="flex items-center gap-2 rounded-sm bg-secondary px-3 py-2 text-xs font-semibold text-primary"><span class="qp-icon text-xl">${ICONO[c.slug] ?? '&#xe90a;'}</span>${esc(c.animal)}</a>`
 		)
 		.join('');
 	const imagen = p.foto
@@ -254,7 +264,7 @@ export function paginaProducto(d: DatosProducto): string {
 		: `<div class="max-w-3xl rounded-lg border bg-secondary p-6 text-sm leading-7 text-muted-foreground">La ficha técnica de este producto aún no está publicada. <a href="${WHATSAPP}?text=${encodeURIComponent(`Hola Quality Pro, necesito la ficha técnica de ${p.nombre}.`)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-primary">Solicítala por WhatsApp</a>.</div>`;
 
 	return `<nav aria-label="Ruta de navegación" class="mb-8 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><a href="/">Inicio</a>${SVG_CHEVRON}<a href="/catalogo">Catálogo</a>${SVG_CHEVRON}${
-		p.categorias[0] ? `<a href="/catalogo?categoria=${esc(p.categorias[0].slug)}">${esc(p.categorias[0].animal)}</a>${SVG_CHEVRON}` : ''
+		p.categorias[0] ? `<a href="/catalogo/${esc(p.categorias[0].slug)}">${esc(p.categorias[0].animal)}</a>${SVG_CHEVRON}` : ''
 	}<span>${esc(p.nombre)}</span></nav>
 <div class="grid items-start gap-10 lg:grid-cols-2">
   <div class="relative grid aspect-square place-items-center rounded-lg border bg-secondary">${SVG_PAQUETE_GRANDE}<p class="absolute bottom-6 text-sm text-muted-foreground">Fotografía del producto pendiente</p>${imagen}</div>

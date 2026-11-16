@@ -1,0 +1,10 @@
+-- Descripciones SEO por especie (meta description y subtítulo del catálogo). Editables en /admin/categorias.
+UPDATE categorias SET categoria_descripcion = 'Vitaminas, premix, núcleos y sales minerales para aves de postura y broiler. Nutrición avícola Quality Pro con despacho a todo Chile.' WHERE categoria_url = 'aves';
+UPDATE categorias SET categoria_descripcion = 'Suplementos para caballos: vitaminas, minerales, energía y cuidado articular. Nutrición equina Quality Pro para deporte, crianza y reproducción.' WHERE categoria_url = 'caballos';
+UPDATE categorias SET categoria_descripcion = 'Premix y núcleos vitamínico-minerales para alimento de perros y gatos. Nutrición Quality Pro para fabricantes de alimento para mascotas.' WHERE categoria_url = 'perros-y-gatos';
+UPDATE categorias SET categoria_descripcion = 'Núcleos, premix vitamínicos y sales minerales para cerdos en lechón, crianza, engorda y reproducción. Nutrición porcina Quality Pro.' WHERE categoria_url = 'cerdos';
+UPDATE categorias SET categoria_descripcion = 'Bloques minerales, sales y suplementos para bovinos de carne y leche. Nutrición para vacas en crianza, engorda y lechería, Quality Pro.' WHERE categoria_url = 'vacas';
+UPDATE categorias SET categoria_descripcion = 'Bloques, sales minerales y vitaminas para ovejas y cabras en pastoreo. Nutrición para ovinos y caprinos Quality Pro, despacho a todo Chile.' WHERE categoria_url = 'ovejas-y-cabras';
+UPDATE categorias SET categoria_descripcion = 'Ácido oxálico, ácido fórmico y productos para el manejo sanitario de colmenas. Insumos apícolas Quality Pro para apicultores de Chile.' WHERE categoria_url = 'abejas';
+UPDATE categorias SET categoria_descripcion = 'Premix vitamínicos y minerales para salmones y peces de cultivo. Nutrición acuícola Quality Pro para plantas de alimento.' WHERE categoria_url = 'peces';
+UPDATE categorias SET categoria_descripcion = 'Productos de higiene y sanitización para planteles: creolina, agua oxigenada, permanganato de potasio y más. Quality Pro, despacho a todo Chile.' WHERE categoria_url = 'higiene';

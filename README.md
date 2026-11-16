@@ -6,7 +6,7 @@ sobre la plataforma de Cloudflare: **Workers** (aplicación), **D1** (base de da
 
 - Sitio: https://qualitypro-v2.asiquedo.cl
 - Panel: https://qualitypro-v2.asiquedo.cl/admin
-- Versión: **1.0.0** (ver [CHANGELOG](CHANGELOG.md))
+- Versión: **1.1.0** (ver [CHANGELOG](CHANGELOG.md))
 
 ## Stack
 
@@ -25,6 +25,7 @@ No hay framework de frontend ni paso de build de CSS: el Worker compone el HTML 
 ```
 src/
   index.ts          Rutas públicas (home, catálogo, producto, distribuidor, API, sitemap, /media)
+  redirecciones.ts  301 desde el sitio anterior y URLs antiguas (mapa en redirecciones.json)
   render.ts         Páginas y componentes con el markup exacto del diseño
   db.ts             Acceso a D1, tipos y caché en memoria (60 s)
   ficha.ts          Conversión de la tabla `ficha` a pestañas de información técnica
@@ -66,6 +67,7 @@ Comandos:
 - [Despliegue y operación](docs/despliegue.md): deploy, secretos, dominio, rollback, logs, costos.
 - [Base de datos](docs/base-de-datos.md): tablas, formato de la ficha técnica, migraciones, consultas útiles.
 - [Panel de administración](docs/admin.md): manual de uso y seguridad.
+- [SEO y redirecciones](docs/seo-redirecciones.md): estructura de URLs, títulos y metas, mapa 301 desde el sitio actual.
 
 ## Licencia
 

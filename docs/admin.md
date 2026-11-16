@@ -69,8 +69,9 @@ Listado con nombre visible, línea, URL, cantidad de productos habilitados y est
 
 - **Nombre visible (especie)**: lo que ve el cliente, p. ej. "Aves".
 - **Nombre de la línea**: nombre interno, p. ej. "Avicola".
-- **URL**: slug para `/catalogo?categoria=<slug>`.
-- **Descripción** y **Estado**.
+- **URL**: slug para `/catalogo/<slug>`.
+- **Descripción**: es la meta description de la página de la especie y su subtítulo en el catálogo (ideal 120–155 caracteres, con las palabras clave de la línea).
+- **Estado**.
 
 Los íconos y fondos de cada especie forman parte del diseño (`src/render.ts`); una especie nueva usa un
 ícono genérico y el fondo por defecto hasta que se agregue al código.

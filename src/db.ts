@@ -14,6 +14,7 @@ export interface Categoria {
 	nombre: string; // ej. "Avicola"
 	slug: string; // categoria_url, ej. "aves"
 	animal: string; // nombre visible, ej. "Aves"
+	descripcion: string | null; // texto SEO (meta description y subtítulo del catálogo), editable en el panel
 }
 
 export interface Producto {
@@ -67,7 +68,7 @@ export async function getCatalogo(env: Env): Promise<Catalogo> {
 
 	const [cats, prods, fotos, rel, fichas] = await env.DB.batch([
 		env.DB.prepare(
-			`SELECT categoria_id id, categoria_nombre nombre, categoria_url slug, categoria_animal animal
+			`SELECT categoria_id id, categoria_nombre nombre, categoria_url slug, categoria_animal animal, categoria_descripcion descripcion
 			 FROM categorias WHERE categoria_estado = 'habilitada'`
 		),
 		env.DB.prepare(
@@ -103,6 +104,7 @@ export async function getCatalogo(env: Env): Promise<Catalogo> {
 	const productos: Producto[] = (prods.results as unknown as Omit<Producto, 'foto' | 'categorias' | 'resumen'>[]).map(
 		(p) => ({
 			...p,
+			nombre: nombreBonito(p.nombre),
 			foto: fotoDe.get(p.id) ?? null,
 			categorias: ordenarCategorias(catsDe.get(p.id) ?? []),
 			resumen: (p.sku && resumenDe.get(normalizarCodigo(p.sku))) || ''
@@ -154,4 +156,24 @@ export function normalizar(v: string): string {
 		.replace(/[̀-ͯ]/g, '')
 		.toLowerCase()
 		.trim();
+}
+
+const PALABRAS_MINUSCULAS = new Set(['de', 'del', 'la', 'el', 'y', 'con', 'para', 'en', 'al', 'los', 'las']);
+/** Siglas que se conservan en mayúsculas; además, cualquier palabra con dígitos (B12, D3, P4) y las de una letra (L, B). */
+const SIGLAS = new Set(['QP', 'ADE', 'HCL', 'USP', 'EC', 'DL', 'BHT', 'BHA', 'UI', 'NPN', 'ATP']);
+
+/** "RED EGGS PLUS" -> "Red Eggs Plus"; conserva siglas (QP, ADE, B12) y conectores en minúscula. */
+export function nombreBonito(nombre: string): string {
+	return nombre
+		.trim()
+		.replace(/\s+/g, ' ')
+		.split(' ')
+		.map((palabra, i) => {
+			const may = palabra.toUpperCase();
+			if (SIGLAS.has(may) || /\d/.test(palabra) || /^[A-Z]$/.test(palabra) || /^[^A-Za-zÀ-ÿ]+$/.test(palabra)) return palabra;
+			const minus = palabra.toLowerCase();
+			if (i > 0 && PALABRAS_MINUSCULAS.has(minus)) return minus;
+			return minus.charAt(0).toUpperCase() + minus.slice(1);
+		})
+		.join(' ');
 }

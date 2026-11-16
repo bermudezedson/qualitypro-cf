@@ -5,6 +5,7 @@ import type { Env, Producto } from './db';
 import { getCatalogo, getFicha } from './db';
 import { parsearFicha, renderPaneles, renderTabs, resumenFicha } from './ficha';
 import { esc } from './html';
+import { resolverRedireccion } from './redirecciones';
 import {
 	filtrarProductos,
 	layout,
@@ -14,6 +15,7 @@ import {
 	paginaDistribuidor,
 	paginaHome,
 	paginaProducto,
+	tituloCategoria,
 	type Meta
 } from './render';
 
@@ -34,20 +36,29 @@ function html(c: Ctx, meta: Meta, cuerpo: (cat: Awaited<ReturnType<typeof getCat
 // ---- Panel de administración
 app.route('/admin', admin);
 
-// ---- Redirecciones de las URLs .html de la plantilla estática
-app.get('/index.html', (c) => c.redirect('/', 301));
-app.get('/catalogo.html', (c) => c.redirect('/catalogo' + new URL(c.req.url).search, 301));
-app.get('/quiero-ser-distribuidor.html', (c) => c.redirect('/quiero-ser-distribuidor', 301));
-app.get('/producto/:slug{.+\\.html}', (c) => c.redirect('/producto/' + c.req.param('slug').replace(/\.html$/, ''), 301));
+// ---- Redirecciones 301 (sitio anterior en WordPress, URLs antiguas de la v2, barras finales)
+app.use('*', async (c, next) => {
+	if (c.req.method === 'GET' || c.req.method === 'HEAD') {
+		const url = new URL(c.req.url);
+		if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/media/')) {
+			const destino = resolverRedireccion(url);
+			if (destino && destino !== url.pathname + url.search) {
+				c.header('Cache-Control', 'public, max-age=3600');
+				return c.redirect(destino, 301);
+			}
+		}
+	}
+	await next();
+});
 
 // ---- Home
 app.get('/', (c) =>
 	html(
 		c,
 		{
-			titulo: 'Quality Pro | Nutrición animal para empresas en Chile',
+			titulo: 'Quality Pro | Nutrición y salud animal en Chile',
 			descripcion:
-				'Vitaminas, minerales y suplementos para nutrición animal. Explora nuestras categorías, cotiza productos y forma parte de la red de distribuidores Quality Pro.',
+				'Vitaminas, minerales, premix y suplementos para aves, bovinos, equinos, cerdos, mascotas, ovinos, abejas y peces. Fabricación chilena, despacho a todo el país.',
 			ruta: '/',
 			jsonLd: [
 				{
@@ -71,28 +82,51 @@ app.get('/', (c) =>
 	)
 );
 
-// ---- Catálogo con filtro por especie y búsqueda
-app.get('/catalogo', async (c) => {
+// ---- Catálogo: /catalogo (todo, con búsqueda ?q=) y /catalogo/<especie>
+async function catalogo(c: Ctx, slug: string) {
 	const cat = await getCatalogo(c.env);
-	const slug = (c.req.query('categoria') ?? '').trim();
 	const q = (c.req.query('q') ?? '').trim().slice(0, 80);
 	const categoria = cat.categorias.find((x) => x.slug === slug) ?? null;
-	if (slug && !categoria) return c.redirect('/catalogo' + (q ? `?q=${encodeURIComponent(q)}` : ''), 302);
+	if (slug && !categoria) return noEncontrado(c);
 	const productos = filtrarProductos(cat.productos, categoria, q);
-	const titulo = categoria ? `${categoria.animal} | Catálogo Quality Pro` : 'Catálogo de productos | Quality Pro Chile';
-	return html(
-		c,
-		{
-			titulo: q ? `Buscar “${q}” | Quality Pro` : titulo,
-			descripcion: categoria
-				? `Productos Quality Pro para ${categoria.animal.toLowerCase()}: vitaminas, minerales y suplementos para nutrición y salud animal.`
-				: 'Explora vitaminas, minerales y suplementos Quality Pro. Filtra por especie y encuentra soluciones para nutrición y salud animal.',
-			ruta: categoria ? `/catalogo?categoria=${categoria.slug}` : '/catalogo',
-			noindex: !!q
-		},
-		() => paginaCatalogo(cat, categoria, q, productos)
-	);
-});
+	const meta: Meta = categoria
+		? {
+				titulo: tituloCategoria(categoria).length > 30 ? `${tituloCategoria(categoria)} | Quality Pro` : `${tituloCategoria(categoria)} | Nutrición animal | Quality Pro`,
+				descripcion:
+					categoria.descripcion?.trim() ||
+					`${tituloCategoria(categoria)}: vitaminas, minerales y suplementos Quality Pro. Cotiza por WhatsApp, despacho a todo Chile.`,
+				ruta: `/catalogo/${categoria.slug}`,
+				noindex: !!q,
+				jsonLd: [
+					{
+						'@context': 'https://schema.org',
+						'@type': 'CollectionPage',
+						name: tituloCategoria(categoria),
+						url: `${c.env.SITE_URL}/catalogo/${categoria.slug}`,
+						numberOfItems: productos.length
+					},
+					{
+						'@context': 'https://schema.org',
+						'@type': 'BreadcrumbList',
+						itemListElement: [
+							{ '@type': 'ListItem', position: 1, name: 'Inicio', item: `${c.env.SITE_URL}/` },
+							{ '@type': 'ListItem', position: 2, name: 'Catálogo', item: `${c.env.SITE_URL}/catalogo` },
+							{ '@type': 'ListItem', position: 3, name: categoria.animal, item: `${c.env.SITE_URL}/catalogo/${categoria.slug}` }
+						]
+					}
+				]
+			}
+		: {
+				titulo: q ? `Buscar “${q}” en el catálogo | Quality Pro` : 'Catálogo de productos de nutrición animal | Quality Pro',
+				descripcion:
+					'Más de 100 productos: vitaminas, minerales, premix, núcleos y suplementos para aves, bovinos, equinos, cerdos, mascotas, ovinos, abejas y peces.',
+				ruta: '/catalogo',
+				noindex: !!q
+			};
+	return html(c, meta, () => paginaCatalogo(cat, categoria, q, productos));
+}
+app.get('/catalogo', (c) => catalogo(c, ''));
+app.get('/catalogo/:slug', (c) => catalogo(c, c.req.param('slug').toLowerCase()));
 
 // ---- Ficha de producto
 app.get('/producto/:slug', async (c) => {
@@ -104,6 +138,7 @@ app.get('/producto/:slug', async (c) => {
 	const ficha = await getFicha(c.env, producto.sku);
 	const secciones = ficha ? parsearFicha(ficha) : [];
 	const descripcion = resumenFicha(secciones) || producto.resumen;
+	const metaDescripcion = resumenFicha(secciones, 155) || producto.resumen.slice(0, 155);
 	const principal = producto.categorias[0];
 	const relacionados: Producto[] = principal
 		? cat.productos.filter((p) => p.id !== producto.id && p.categorias.some((x) => x.slug === principal.slug)).slice(0, 3)
@@ -113,8 +148,10 @@ app.get('/producto/:slug', async (c) => {
 	return html(
 		c,
 		{
-			titulo: `${producto.nombre} | Ficha de producto Quality Pro`,
-			descripcion: descripcion || `${producto.nombre}: producto Quality Pro para nutrición y salud animal.`,
+			titulo: `${producto.nombre} | ${principal ? principal.animal + ' | ' : ''}Quality Pro`,
+			descripcion:
+				metaDescripcion ||
+				`${producto.nombre}${producto.presentacion ? ` (${producto.presentacion.toLowerCase()})` : ''}: producto Quality Pro${principal ? ` para ${principal.animal.toLowerCase()}` : ''}. Cotiza por WhatsApp, despacho a todo Chile.`,
 			ruta: `/producto/${producto.slug}`,
 			og: { tipo: 'product', imagen },
 			jsonLd: [
@@ -135,7 +172,7 @@ app.get('/producto/:slug', async (c) => {
 					itemListElement: [
 						{ '@type': 'ListItem', position: 1, name: 'Inicio', item: `${c.env.SITE_URL}/` },
 						{ '@type': 'ListItem', position: 2, name: 'Catálogo', item: `${c.env.SITE_URL}/catalogo` },
-						...(principal ? [{ '@type': 'ListItem', position: 3, name: principal.animal, item: `${c.env.SITE_URL}/catalogo?categoria=${principal.slug}` }] : []),
+						...(principal ? [{ '@type': 'ListItem', position: 3, name: principal.animal, item: `${c.env.SITE_URL}/catalogo/${principal.slug}` }] : []),
 						{ '@type': 'ListItem', position: principal ? 4 : 3, name: producto.nombre, item: `${c.env.SITE_URL}/producto/${producto.slug}` }
 					]
 				}
@@ -158,7 +195,7 @@ app.get('/quiero-ser-distribuidor', (c) =>
 	html(
 		c,
 		{
-			titulo: 'Quiero ser distribuidor | Quality Pro Chile',
+			titulo: 'Quiero ser distribuidor | Red de distribuidores Quality Pro',
 			descripcion: 'Únete a la red de distribuidores Quality Pro. Envía los datos de tu empresa y los productos de nutrición animal que te interesan.',
 			ruta: '/quiero-ser-distribuidor'
 		},
@@ -201,7 +238,7 @@ app.get('/api/productos', async (c) => {
 app.get('/api/categorias', async (c) => {
 	const cat = await getCatalogo(c.env);
 	c.header('Cache-Control', CACHE_PAGINA);
-	return c.json(cat.categorias.map((x) => ({ slug: x.slug, nombre: x.animal, linea: x.nombre, url: `/catalogo?categoria=${x.slug}` })));
+	return c.json(cat.categorias.map((x) => ({ slug: x.slug, nombre: x.animal, linea: x.nombre, url: `/catalogo/${x.slug}` })));
 });
 
 // ---- SEO
@@ -212,7 +249,7 @@ app.get('/sitemap.xml', async (c) => {
 		{ loc: '/', p: '1.0' },
 		{ loc: '/catalogo', p: '0.9' },
 		{ loc: '/quiero-ser-distribuidor', p: '0.5' },
-		...cat.categorias.map((x) => ({ loc: `/catalogo?categoria=${x.slug}`, p: '0.8' })),
+		...cat.categorias.map((x) => ({ loc: `/catalogo/${x.slug}`, p: '0.8' })),
 		...cat.productos.map((x) => ({ loc: `/producto/${x.slug}`, p: '0.7', mod: x.actualizado }))
 	];
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
