@@ -2,6 +2,13 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Versionado semántico.
 
+## [1.2.0] - 2026-11-17
+
+### Añadido
+
+- Zoom de fotos en la ficha de producto: al hacer clic en la imagen principal o en el botón de lupa se
+  abre un visor a pantalla completa con flechas, teclado (Escape, ← →) y deslizamiento táctil.
+
 ## [1.1.1] - 2026-11-16
 
 ### Corregido

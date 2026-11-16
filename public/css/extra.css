@@ -33,3 +33,118 @@
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
+
+/* Zoom de la foto principal (lightbox) */
+.galeria-principal [data-galeria-imagen] {
+	cursor: zoom-in;
+}
+.galeria-zoom-btn {
+	position: absolute;
+	right: 12px;
+	bottom: 12px;
+	width: 40px;
+	height: 40px;
+	display: grid;
+	place-items: center;
+	border: 1px solid var(--color-border, #e2e8f0);
+	border-radius: 999px;
+	background: var(--color-card, #fff);
+	color: var(--color-primary, #1f6f9f);
+	cursor: zoom-in;
+	box-shadow: 0 2px 8px rgba(15, 51, 83, 0.15);
+	transition: transform 0.15s, background 0.15s;
+}
+.galeria-zoom-btn:hover {
+	transform: scale(1.06);
+	background: var(--color-secondary, #eef3f7);
+}
+.lightbox {
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(8, 28, 48, 0.92);
+	padding: 24px;
+}
+.lightbox[hidden] {
+	display: none;
+}
+.lightbox-figura {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	max-width: 100%;
+	max-height: 100%;
+}
+.lightbox-figura img {
+	max-width: min(1100px, 92vw);
+	max-height: 82vh;
+	object-fit: contain;
+	background: #fff;
+	border-radius: 12px;
+	padding: 12px;
+	cursor: zoom-out;
+}
+.lightbox-figura figcaption {
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+}
+.lightbox-cerrar,
+.lightbox-flecha {
+	position: absolute;
+	display: grid;
+	place-items: center;
+	border: 0;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.14);
+	color: #fff;
+	cursor: pointer;
+	line-height: 1;
+	transition: background 0.15s;
+}
+.lightbox-cerrar:hover,
+.lightbox-flecha:hover {
+	background: rgba(255, 255, 255, 0.3);
+}
+.lightbox-cerrar {
+	top: 16px;
+	right: 16px;
+	width: 44px;
+	height: 44px;
+	font-size: 32px;
+}
+.lightbox-flecha {
+	top: 50%;
+	transform: translateY(-50%);
+	width: 48px;
+	height: 48px;
+	font-size: 36px;
+}
+.lightbox-prev {
+	left: 16px;
+}
+.lightbox-next {
+	right: 16px;
+}
+@media (max-width: 640px) {
+	.lightbox {
+		padding: 12px;
+	}
+	.lightbox-figura img {
+		max-width: 96vw;
+		max-height: 70vh;
+		padding: 6px;
+	}
+	.lightbox-flecha {
+		width: 40px;
+		height: 40px;
+		top: auto;
+		bottom: 18px;
+		transform: none;
+	}
+}

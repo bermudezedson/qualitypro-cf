@@ -54,7 +54,7 @@ salvo páginas que Cloudflare tenga en caché (hasta 10 minutos).
 Disponible una vez creado el producto.
 
 - **Subir**: varios archivos a la vez, JPG, PNG o WebP, máximo 5 MB cada uno. Se guardan en R2.
-- La primera foto es la del catálogo y la imagen principal de la ficha; las demás aparecen como miniaturas de la galería en el mismo orden. ↑ mueve una foto antes.
+- La primera foto es la del catálogo y la imagen principal de la ficha; las demás aparecen como miniaturas de la galería en el mismo orden. ↑ mueve una foto antes. En el sitio, un clic sobre la foto la amplía a pantalla completa, por lo que conviene subir imágenes de al menos 800 × 800 px.
 - **Eliminar** borra la foto del producto y el archivo de R2 si ningún otro producto lo usa.
 - Recomendación: imágenes cuadradas de 800 × 800 px o más, fondo blanco, en JPG o WebP.
 

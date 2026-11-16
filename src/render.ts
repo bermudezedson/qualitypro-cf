@@ -257,7 +257,15 @@ export function paginaProducto(d: DatosProducto): string {
 		)
 		.join('');
 	const imagen = p.foto
-		? `<img src="${mediaUrl(p.foto)}" alt="${esc(p.nombre)}" width="800" height="800" fetchpriority="high" class="absolute inset-0 h-full w-full rounded-lg object-contain bg-card p-6" data-galeria-imagen onerror="this.style.display='none'">`
+		? `<img src="${mediaUrl(p.foto)}" alt="${esc(p.nombre)}" width="800" height="800" fetchpriority="high" class="absolute inset-0 h-full w-full rounded-lg object-contain bg-card p-6" data-galeria-imagen onerror="this.style.display='none'">
+		   <button type="button" class="galeria-zoom-btn" data-galeria-zoom aria-label="Ampliar foto"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg></button>`
+		: '';
+	const lightbox = p.fotos.length
+		? `<div class="lightbox" data-lightbox hidden role="dialog" aria-modal="true" aria-label="Foto ampliada de ${esc(p.nombre)}">
+  <button type="button" class="lightbox-cerrar" data-lightbox-cerrar aria-label="Cerrar">&times;</button>
+  ${p.fotos.length > 1 ? '<button type="button" class="lightbox-flecha lightbox-prev" data-lightbox-prev aria-label="Foto anterior">&#8249;</button><button type="button" class="lightbox-flecha lightbox-next" data-lightbox-next aria-label="Foto siguiente">&#8250;</button>' : ''}
+  <figure class="lightbox-figura"><img data-lightbox-img src="${mediaUrl(p.fotos[0])}" alt="${esc(p.nombre)}"><figcaption data-lightbox-pie>${esc(p.nombre)}${p.fotos.length > 1 ? ' · 1 / ' + p.fotos.length : ''}</figcaption></figure>
+</div>`
 		: '';
 	const miniaturas =
 		p.fotos.length > 1
@@ -277,7 +285,7 @@ export function paginaProducto(d: DatosProducto): string {
 		p.categorias[0] ? `<a href="/catalogo/${esc(p.categorias[0].slug)}">${esc(p.categorias[0].animal)}</a>${SVG_CHEVRON}` : ''
 	}<span>${esc(p.nombre)}</span></nav>
 <div class="grid items-start gap-10 lg:grid-cols-2">
-  <div><div class="relative grid aspect-square place-items-center rounded-lg border bg-secondary">${SVG_PAQUETE_GRANDE}<p class="absolute bottom-6 text-sm text-muted-foreground">Fotografía del producto pendiente</p>${imagen}</div>${miniaturas}</div>
+  <div><div class="relative grid aspect-square place-items-center rounded-lg border bg-secondary${p.foto ? ' galeria-principal' : ''}" data-galeria-principal>${SVG_PAQUETE_GRANDE}<p class="absolute bottom-6 text-sm text-muted-foreground">Fotografía del producto pendiente</p>${imagen}</div>${miniaturas}${lightbox}</div>
   <div><p class="eyebrow">Quality Pro · Nutrición animal</p><h1 class="mt-3 text-3xl font-extrabold text-navy md:text-4xl">${esc(p.nombre)}</h1><p class="mt-4 flex items-center gap-2 text-sm font-semibold text-primary">${SVG_PAQUETE_MINI}${esc(presentacion)}</p>${
 		d.descripcion ? `<p class="mt-5 text-sm leading-7 text-muted-foreground">${esc(d.descripcion)}</p>` : ''
 	}${p.sku ? `<p class="mt-3 text-xs font-semibold text-muted-foreground">Código ${esc(p.sku)}</p>` : ''}
