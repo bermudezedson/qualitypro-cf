@@ -23,7 +23,8 @@ export interface Producto {
 	slug: string;
 	sku: string | null;
 	presentacion: string | null;
-	foto: string | null; // ruta relativa en R2, ej. productos/xxx.webp
+	foto: string | null; // primera foto (catálogo), ruta en R2, ej. productos/xxx.webp
+	fotos: string[]; // todas las fotos en orden (galería de la ficha)
 	categorias: Categoria[];
 	resumen: string; // primera parte de la ficha (texto plano) para tarjetas, meta y buscador
 	actualizado: string | null;
@@ -85,9 +86,10 @@ export async function getCatalogo(env: Env): Promise<Catalogo> {
 	const categorias = ordenarCategorias(cats.results as unknown as Categoria[]);
 	const porId = new Map(categorias.map((c) => [c.id, c]));
 
-	const fotoDe = new Map<number, string>();
+	const fotosDe = new Map<number, string[]>();
 	for (const f of fotos.results as { producto_id: number; imagen: string }[]) {
-		if (!fotoDe.has(f.producto_id)) fotoDe.set(f.producto_id, f.imagen);
+		if (!fotosDe.has(f.producto_id)) fotosDe.set(f.producto_id, []);
+		fotosDe.get(f.producto_id)!.push(f.imagen);
 	}
 	const catsDe = new Map<number, Categoria[]>();
 	for (const r of rel.results as { producto_id: number; categoria_id: number }[]) {
@@ -101,11 +103,12 @@ export async function getCatalogo(env: Env): Promise<Catalogo> {
 		resumenDe.set(normalizarCodigo(f.codigo), textoPlano(f.descs.split('|')[0]));
 	}
 
-	const productos: Producto[] = (prods.results as unknown as Omit<Producto, 'foto' | 'categorias' | 'resumen'>[]).map(
+	const productos: Producto[] = (prods.results as unknown as Omit<Producto, 'foto' | 'fotos' | 'categorias' | 'resumen'>[]).map(
 		(p) => ({
 			...p,
 			nombre: nombreBonito(p.nombre),
-			foto: fotoDe.get(p.id) ?? null,
+			foto: fotosDe.get(p.id)?.[0] ?? null,
+			fotos: fotosDe.get(p.id) ?? [],
 			categorias: ordenarCategorias(catsDe.get(p.id) ?? []),
 			resumen: (p.sku && resumenDe.get(normalizarCodigo(p.sku))) || ''
 		})

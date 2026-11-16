@@ -147,6 +147,20 @@
     }
   }
 
+  // Ficha de producto: galería de fotos
+  var galeria = document.querySelector("[data-galeria]");
+  if (galeria) {
+    var principal = document.querySelector("[data-galeria-imagen]");
+    galeria.querySelectorAll("[data-galeria-miniatura]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (!principal) return;
+        principal.style.display = "";
+        principal.src = btn.getAttribute("data-src");
+        galeria.querySelectorAll("[data-galeria-miniatura]").forEach(function (b) { b.classList.toggle("activa", b === btn); });
+      });
+    });
+  }
+
   // Ficha de producto: pestañas + cotización por WhatsApp
   var tabs = document.querySelectorAll("[data-tab]");
   if (tabs.length) {

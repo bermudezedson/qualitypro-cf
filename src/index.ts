@@ -161,7 +161,7 @@ app.get('/producto/:slug', async (c) => {
 					name: producto.nombre,
 					sku: producto.sku ?? undefined,
 					description: descripcion || undefined,
-					image: imagen ? [imagen] : undefined,
+					image: producto.fotos.length ? producto.fotos.map((f) => `${c.env.SITE_URL}${mediaUrl(f)}`) : undefined,
 					category: principal?.animal,
 					brand: { '@type': 'Brand', name: 'Quality Pro' },
 					url: `${c.env.SITE_URL}/producto/${producto.slug}`

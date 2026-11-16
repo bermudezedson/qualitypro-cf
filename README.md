@@ -6,7 +6,7 @@ sobre la plataforma de Cloudflare: **Workers** (aplicación), **D1** (base de da
 
 - Sitio: https://qualitypro-v2.asiquedo.cl
 - Panel: https://qualitypro-v2.asiquedo.cl/admin
-- Versión: **1.1.0** (ver [CHANGELOG](CHANGELOG.md))
+- Versión: **1.1.1** (ver [CHANGELOG](CHANGELOG.md))
 
 ## Stack
 
@@ -32,7 +32,7 @@ src/
   html.ts           Escapado HTML / JSON seguro
   fragments.json    Bloques estáticos extraídos de la plantilla (generado)
   admin/            Panel: auth.ts (sesión), index.ts (rutas), views.ts (vistas)
-public/             Assets estáticos: css/, js/, fonts/, assets/, favicon, robots.txt
+public/             Assets estáticos: css/ (styles.css del diseño + extra.css propio), js/, fonts/, assets/, favicon, robots.txt
 template-src/       Plantilla HTML original (fuente de los fragmentos)
 scripts/            extraer-fragmentos.mjs
 db/                 Esquema D1, seed inicial y conversor MySQL → SQLite

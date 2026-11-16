@@ -2,6 +2,13 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Versionado semántico.
 
+## [1.1.1] - 2026-11-16
+
+### Corregido
+
+- La ficha de producto solo mostraba la primera foto. Ahora incluye galería: imagen principal y miniaturas
+  con cambio al clic (`public/css/extra.css`, `js/main.js`); el JSON-LD `Product` lista todas las fotos.
+
 ## [1.1.0] - 2026-11-16
 
 ### Añadido

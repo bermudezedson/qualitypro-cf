@@ -121,6 +121,7 @@ ${meta.noindex ? '<meta name="robots" content="noindex, follow">' : ''}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="/css/extra.css">
 ${(meta.jsonLd ?? []).map((j) => `<script type="application/ld+json">${jsonScript(j)}</script>`).join('\n')}
 <script>window.QP_DATA=${jsonScript(datosCliente(cat))};</script>
 <script defer src="/js/main.js"></script>
@@ -256,8 +257,17 @@ export function paginaProducto(d: DatosProducto): string {
 		)
 		.join('');
 	const imagen = p.foto
-		? `<img src="${mediaUrl(p.foto)}" alt="${esc(p.nombre)}" width="800" height="800" fetchpriority="high" class="absolute inset-0 h-full w-full rounded-lg object-contain bg-card p-6" onerror="this.remove()">`
+		? `<img src="${mediaUrl(p.foto)}" alt="${esc(p.nombre)}" width="800" height="800" fetchpriority="high" class="absolute inset-0 h-full w-full rounded-lg object-contain bg-card p-6" data-galeria-imagen onerror="this.style.display='none'">`
 		: '';
+	const miniaturas =
+		p.fotos.length > 1
+			? `<div class="galeria-miniaturas" data-galeria>${p.fotos
+					.map(
+						(f, i) =>
+							`<button type="button" class="galeria-miniatura${i === 0 ? ' activa' : ''}" data-galeria-miniatura data-src="${mediaUrl(f)}" aria-label="Ver foto ${i + 1} de ${p.fotos.length}"><img src="${mediaUrl(f)}" alt="" loading="lazy" width="160" height="160" onerror="this.parentElement.remove()"></button>`
+					)
+					.join('')}</div>`
+			: '';
 	const presentacion = p.presentacion?.trim() || 'Consultar presentación y formato';
 	const infoTecnica = d.tieneFicha
 		? `<div class="flex overflow-x-auto border-b" role="tablist" aria-label="Información técnica">${d.tabs}</div><div id="product-panel" role="tabpanel" aria-labelledby="tab-${d.tabs.match(/data-tab="([^"]+)"/)?.[1] ?? ''}" class="max-w-3xl py-6 text-sm leading-7 text-muted-foreground">${d.paneles}</div>`
@@ -267,7 +277,7 @@ export function paginaProducto(d: DatosProducto): string {
 		p.categorias[0] ? `<a href="/catalogo/${esc(p.categorias[0].slug)}">${esc(p.categorias[0].animal)}</a>${SVG_CHEVRON}` : ''
 	}<span>${esc(p.nombre)}</span></nav>
 <div class="grid items-start gap-10 lg:grid-cols-2">
-  <div class="relative grid aspect-square place-items-center rounded-lg border bg-secondary">${SVG_PAQUETE_GRANDE}<p class="absolute bottom-6 text-sm text-muted-foreground">Fotografía del producto pendiente</p>${imagen}</div>
+  <div><div class="relative grid aspect-square place-items-center rounded-lg border bg-secondary">${SVG_PAQUETE_GRANDE}<p class="absolute bottom-6 text-sm text-muted-foreground">Fotografía del producto pendiente</p>${imagen}</div>${miniaturas}</div>
   <div><p class="eyebrow">Quality Pro · Nutrición animal</p><h1 class="mt-3 text-3xl font-extrabold text-navy md:text-4xl">${esc(p.nombre)}</h1><p class="mt-4 flex items-center gap-2 text-sm font-semibold text-primary">${SVG_PAQUETE_MINI}${esc(presentacion)}</p>${
 		d.descripcion ? `<p class="mt-5 text-sm leading-7 text-muted-foreground">${esc(d.descripcion)}</p>` : ''
 	}${p.sku ? `<p class="mt-3 text-xs font-semibold text-muted-foreground">Código ${esc(p.sku)}</p>` : ''}

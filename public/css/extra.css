@@ -1,0 +1,35 @@
+/* Estilos propios de la v2 que no existen en la plantilla compilada (styles.css).
+   Mantener pequeño: solo lo que el diseño original no traía. */
+
+/* Galería de la ficha de producto */
+.galeria-miniaturas {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 8px;
+	margin-top: 12px;
+}
+.galeria-miniatura {
+	position: relative;
+	aspect-ratio: 1;
+	overflow: hidden;
+	border: 2px solid var(--color-border, #e2e8f0);
+	border-radius: 8px;
+	background: var(--color-card, #fff);
+	padding: 4px;
+	cursor: pointer;
+	transition: border-color 0.15s;
+}
+.galeria-miniatura:hover,
+.galeria-miniatura.activa {
+	border-color: var(--color-primary, #1f6f9f);
+}
+.galeria-miniatura img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+@media (max-width: 640px) {
+	.galeria-miniaturas {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
