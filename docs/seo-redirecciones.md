@@ -34,7 +34,7 @@ Los slugs de categoría son los del diseño (`aves`, `vacas`, `caballos`, `perro
 
 Además: `canonical` absoluto, Open Graph con imagen (foto del producto o imagen por defecto), JSON-LD
 `Organization` (inicio), `CollectionPage` + `BreadcrumbList` (categoría), `Product` + `BreadcrumbList`
-(producto), `sitemap.xml` con categorías y productos, `robots.txt` que excluye `/admin`.
+(producto), `sitemap.xml` con categorías y productos, `robots.txt` (editable en el panel; por defecto permite buscadores y rastreadores de IA y excluye `/admin`) y `llms.txt` (editable; por defecto generado desde la base con empresa, especies y catálogo).
 
 Los nombres de producto se guardan en mayúsculas en la base y se muestran en formato título
 (`nombreBonito` en `src/db.ts`): "RED EGGS PLUS" → "Red Eggs Plus", conservando siglas (QP, ADE, HCL,

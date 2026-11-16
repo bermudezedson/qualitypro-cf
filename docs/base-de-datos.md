@@ -84,6 +84,11 @@ reemplaza por `/` dentro de los textos.
 Heredada de Laravel. Se mantiene por las claves foráneas `usuario_id`; el panel usa el `id` más bajo
 como autor. No se usa para autenticación (el panel usa secrets del Worker).
 
+### ajustes
+
+`clave` (PK), `valor`, `updated_at`. Guarda contenidos editables del panel: hoy `robots.txt` y `llms.txt`
+(ver `src/archivos.ts`). Si no hay fila, el sitio sirve el valor por defecto.
+
 ### Heredadas sin uso en v2
 
 `sliders`, `articulos`, `articulos_categorias`, `categorias_articulos`. Se conservan por si se recupera

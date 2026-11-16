@@ -2,6 +2,21 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Versionado semántico.
 
+## [1.3.0] - 2026-11-17
+
+### Añadido
+
+- `llms.txt` (guía para asistentes de IA, formato llmstxt.org) generado desde la base: empresa, contacto,
+  especies con su descripción y el catálogo completo con enlaces.
+- `robots.txt` y `llms.txt` editables desde el panel en **Archivos SEO**, con botón para restaurar el valor
+  por defecto y marcador `{{SITE_URL}}`. Se guardan en la nueva tabla `ajustes` (migración `0003`).
+- `robots.txt` por defecto permite buscadores, Ads, imágenes y rastreadores de IA (Google-Extended,
+  GPTBot, OAI-SearchBot, ClaudeBot, meta-externalagent, etc.), bloquea `/admin` y enlaza el sitemap.
+
+### Cambiado
+
+- `robots.txt` deja de ser un archivo estático y lo sirve el Worker.
+
 ## [1.2.0] - 2026-11-17
 
 ### Añadido

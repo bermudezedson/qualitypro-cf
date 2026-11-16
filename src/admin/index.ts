@@ -4,11 +4,13 @@ import type { Env } from '../db';
 import { invalidarCache, normalizarCodigo } from '../db';
 import { parsearFicha, type Seccion } from '../ficha';
 import { cerrarSesion, crearSesion, requiereSesion, sesionValida, validarPassword } from './auth';
+import { CLAVES, getAjuste, porDefecto, setAjuste, type Archivo } from '../archivos';
 import {
 	layoutAdmin,
 	vistaCategorias,
 	vistaFormCategoria,
 	vistaFormProducto,
+	vistaArchivos,
 	vistaInicio,
 	vistaLogin,
 	vistaProductos,
@@ -434,6 +436,31 @@ admin.post('/categorias/:id', async (c) => {
 		.run();
 	invalidarCache();
 	return c.redirect(conAviso(`/admin/categorias/${id}`, 'ok', 'Cambios guardados.'));
+});
+
+// ---------------------------------------------------------------- archivos SEO (robots.txt, llms.txt)
+async function archivosEditables(env: Env) {
+	const out = [];
+	for (const nombre of CLAVES) {
+		const propio = await getAjuste(env, nombre);
+		out.push({ nombre, contenido: propio ?? (await porDefecto(env, nombre)), personalizado: propio !== null, url: `/${nombre}` });
+	}
+	return out;
+}
+admin.get('/archivos', async (c) => c.html(layoutAdmin('Archivos SEO', vistaArchivos(await archivosEditables(c.env)), { activo: 'archivos', aviso: aviso(c) })));
+admin.post('/archivos', async (c) => {
+	const b = await c.req.parseBody();
+	const nombre = String(b.archivo ?? '') as Archivo;
+	if (!(CLAVES as readonly string[]).includes(nombre)) return c.notFound();
+	if (b.accion === 'restaurar') {
+		await setAjuste(c.env, nombre, null);
+		return c.redirect(conAviso('/admin/archivos', 'ok', `${nombre} restaurado al valor por defecto.`));
+	}
+	const contenido = String(b.contenido ?? '').replace(/\r\n/g, '\n').trim();
+	if (!contenido) return c.redirect(conAviso('/admin/archivos', 'error', 'El contenido no puede quedar vacío; usa "Restaurar valor por defecto".'));
+	if (contenido.length > 200_000) return c.redirect(conAviso('/admin/archivos', 'error', 'El contenido supera los 200 000 caracteres.'));
+	await setAjuste(c.env, nombre, contenido);
+	return c.redirect(conAviso('/admin/archivos', 'ok', `${nombre} guardado.`));
 });
 
 admin.notFound((c) => c.html(layoutAdmin('No encontrado', '<header class="cab"><h1>No encontrado</h1></header><p><a href="/admin">Volver al inicio</a></p>'), 404));

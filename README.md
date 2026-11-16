@@ -6,7 +6,7 @@ sobre la plataforma de Cloudflare: **Workers** (aplicación), **D1** (base de da
 
 - Sitio: https://qualitypro-v2.asiquedo.cl
 - Panel: https://qualitypro-v2.asiquedo.cl/admin
-- Versión: **1.2.0** (ver [CHANGELOG](CHANGELOG.md))
+- Versión: **1.3.0** (ver [CHANGELOG](CHANGELOG.md))
 
 ## Stack
 
@@ -24,7 +24,8 @@ No hay framework de frontend ni paso de build de CSS: el Worker compone el HTML 
 
 ```
 src/
-  index.ts          Rutas públicas (home, catálogo, producto, distribuidor, API, sitemap, /media)
+  index.ts          Rutas públicas (home, catálogo, producto, distribuidor, API, sitemap, robots, llms, /media)
+  archivos.ts       robots.txt y llms.txt editables (tabla ajustes) con valores por defecto
   redirecciones.ts  301 desde el sitio anterior y URLs antiguas (mapa en redirecciones.json)
   render.ts         Páginas y componentes con el markup exacto del diseño
   db.ts             Acceso a D1, tipos y caché en memoria (60 s)
@@ -32,7 +33,7 @@ src/
   html.ts           Escapado HTML / JSON seguro
   fragments.json    Bloques estáticos extraídos de la plantilla (generado)
   admin/            Panel: auth.ts (sesión), index.ts (rutas), views.ts (vistas)
-public/             Assets estáticos: css/ (styles.css del diseño + extra.css propio), js/, fonts/, assets/, favicon, robots.txt
+public/             Assets estáticos: css/ (styles.css del diseño + extra.css propio), js/, fonts/, assets/, favicon
 template-src/       Plantilla HTML original (fuente de los fragmentos)
 scripts/            extraer-fragmentos.mjs
 db/                 Esquema D1, seed inicial y conversor MySQL → SQLite

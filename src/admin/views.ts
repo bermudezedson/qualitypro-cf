@@ -16,6 +16,7 @@ export function layoutAdmin(titulo: string, cuerpo: string, opts: { activo?: str
     <a href="/admin" class="${opts.activo === 'inicio' ? 'activo' : ''}">Inicio</a>
     <a href="/admin/productos" class="${opts.activo === 'productos' ? 'activo' : ''}">Productos</a>
     <a href="/admin/categorias" class="${opts.activo === 'categorias' ? 'activo' : ''}">Categorías</a>
+    <a href="/admin/archivos" class="${opts.activo === 'archivos' ? 'activo' : ''}">Archivos SEO</a>
     <a href="/" target="_blank" rel="noopener">Ver sitio ↗</a>
   </nav>
   <form method="post" action="/admin/logout" class="salir"><button type="submit" class="btn btn-sec">Cerrar sesión</button></form>
@@ -286,4 +287,35 @@ export function vistaFormCategoria(c: FormCategoria): string {
 </section>
 <div class="barra-guardar"><button type="submit" class="btn">${nuevo ? 'Crear categoría' : 'Guardar cambios'}</button><a class="btn btn-sec" href="/admin/categorias">Volver</a></div>
 </form>`;
+}
+
+export interface ArchivoEditable {
+	nombre: string;
+	contenido: string;
+	personalizado: boolean;
+	url: string;
+}
+
+export function vistaArchivos(archivos: ArchivoEditable[]): string {
+	return `<header class="cab"><h1>Archivos SEO</h1></header>
+<p class="muted">Estos archivos se sirven en la raíz del sitio. Puedes usar <code>{{SITE_URL}}</code> y se reemplaza por la dirección del sitio. "Restaurar valor por defecto" vuelve al contenido generado automáticamente (en llms.txt incluye el catálogo completo actualizado).</p>
+${archivos
+	.map(
+		(a) => `<section class="panel">
+  <h2>${esc(a.nombre)} <small class="muted">· <a href="${esc(a.url)}" target="_blank" rel="noopener">ver en el sitio ↗</a> · ${a.personalizado ? 'contenido personalizado' : 'valor por defecto'}</small></h2>
+  <form method="post" action="/admin/archivos" class="form">
+    <input type="hidden" name="archivo" value="${esc(a.nombre)}">
+    <label>Contenido<textarea name="contenido" rows="${a.nombre === 'llms.txt' ? 24 : 18}" spellcheck="false" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem">${esc(a.contenido)}</textarea></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button type="submit" name="accion" value="guardar" class="btn">Guardar</button>
+      <button type="submit" name="accion" value="restaurar" class="btn btn-sec" ${a.personalizado ? '' : 'disabled'} formnovalidate>Restaurar valor por defecto</button>
+    </div>
+  </form>
+</section>`
+	)
+	.join('')}
+<section class="panel">
+  <h2>sitemap.xml</h2>
+  <p class="muted">Se genera automáticamente desde la base de datos (inicio, catálogo, especies y productos habilitados). <a href="/sitemap.xml" target="_blank" rel="noopener">Ver sitemap ↗</a></p>
+</section>`;
 }

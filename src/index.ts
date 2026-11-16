@@ -6,6 +6,7 @@ import { getCatalogo, getFicha } from './db';
 import { parsearFicha, renderPaneles, renderTabs, resumenFicha } from './ficha';
 import { esc } from './html';
 import { resolverRedireccion } from './redirecciones';
+import { contenidoArchivo } from './archivos';
 import {
 	filtrarProductos,
 	layout,
@@ -258,6 +259,14 @@ app.get('/sitemap.xml', async (c) => {
 	c.header('Cache-Control', 'public, max-age=3600');
 	return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=utf-8' });
 });
+
+// ---- robots.txt y llms.txt (editables desde /admin/archivos)
+for (const archivo of ['robots.txt', 'llms.txt'] as const) {
+	app.get(`/${archivo}`, async (c) => {
+		c.header('Cache-Control', 'public, max-age=300, s-maxage=3600');
+		return c.text(await contenidoArchivo(c.env, archivo), 200, { 'Content-Type': 'text/plain; charset=utf-8' });
+	});
+}
 
 // ---- 404
 app.notFound((c) => noEncontrado(c));

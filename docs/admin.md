@@ -76,6 +76,20 @@ Listado con nombre visible, línea, URL, cantidad de productos habilitados y est
 Los íconos y fondos de cada especie forman parte del diseño (`src/render.ts`); una especie nueva usa un
 ícono genérico y el fondo por defecto hasta que se agregue al código.
 
+## Archivos SEO
+
+Edita `robots.txt` y `llms.txt`, que el sitio sirve en su raíz.
+
+- **robots.txt**: reglas para buscadores y rastreadores de IA. El valor por defecto permite todo, bloquea
+  `/admin` y enlaza el sitemap.
+- **llms.txt**: guía para asistentes de IA (ChatGPT, Gemini, Claude, Perplexity). El valor por defecto se
+  genera desde la base con la empresa, las especies y todos los productos, así que se actualiza solo.
+  Si lo personalizas, deja de actualizarse automáticamente hasta que pulses "Restaurar valor por defecto".
+- En ambos puedes escribir `{{SITE_URL}}` y se reemplaza por la dirección del sitio.
+- `sitemap.xml` no se edita: se genera desde la base.
+
+Los cambios tardan hasta 5 minutos en verse por la caché.
+
 ## Buenas prácticas
 
 - Cambiar la contraseña después de compartirla por cualquier canal.

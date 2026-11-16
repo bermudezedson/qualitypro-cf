@@ -180,3 +180,8 @@ export function nombreBonito(nombre: string): string {
 		})
 		.join(' ');
 }
+
+/** "Productos para aves" / "Productos de higiene y sanitización" (usado por render y llms.txt). */
+export function tituloEspecie(c: { slug: string; animal: string }): string {
+	return c.slug === 'higiene' ? 'Productos de higiene y sanitización' : `Productos para ${c.animal.toLowerCase()}`;
+}
