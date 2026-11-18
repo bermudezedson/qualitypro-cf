@@ -4,7 +4,10 @@ main = "src/index.ts"
 compatibility_date = "2026-11-01"
 compatibility_flags = ["nodejs_compat"]
 account_id = "7a7a6f232ae4f5a5b3963b25b0894388"
-routes = [{ pattern = "qualitypro-v2.asiquedo.cl", custom_domain = true }]
+routes = [
+  { pattern = "qualitypro.cl", custom_domain = true },
+  { pattern = "qualitypro-v2.asiquedo.cl", custom_domain = true }
+]
 
 [[d1_databases]]
 binding = "DB"
@@ -23,8 +26,8 @@ binding = "ASSETS"
 [vars]
 # Dominio canónico del sitio. Al pasar a producción: SITE_URL = "https://qualitypro.cl" y
 # HOSTS_ALIAS = "www.qualitypro.cl,qualitypro-v2.asiquedo.cl" (esos hosts redirigen 301 al canónico).
-SITE_URL = "https://qualitypro-v2.asiquedo.cl"
-HOSTS_ALIAS = ""
+SITE_URL = "https://qualitypro.cl"
+HOSTS_ALIAS = "www.qualitypro.cl,qualitypro-v2.asiquedo.cl"
 # Clave pública del widget de Cloudflare Turnstile (anti-bots de los formularios). El secreto va en
 # `wrangler secret put TURNSTILE_SECRET`. Sin estas claves, los formularios usan honeypot + límite por IP.
 # TURNSTILE_SITE_KEY = "0x4AAAAAAA..."

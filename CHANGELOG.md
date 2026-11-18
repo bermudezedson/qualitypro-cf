@@ -2,6 +2,26 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Versionado semántico.
 
+## [1.5.0] - 2026-11-18
+
+### Puesta en producción
+
+- El sitio pasa a servir **https://qualitypro.cl** (dominio personalizado del Worker). `SITE_URL` apunta al
+  dominio definitivo; `www.qualitypro.cl` y `qualitypro-v2.asiquedo.cl` redirigen 301 (`HOSTS_ALIAS`).
+- Las redirecciones 301 del sitio WordPress anterior quedan activas en el dominio real.
+
+### Añadido
+
+- Respuesta automática por correo a quien escribe (contacto y distribuidor), con asunto y texto editables en
+  el panel y marcadores `{{nombre}}` y `{{empresa}}`; se puede desactivar.
+- Teléfono de los formularios con prefijo fijo `+56 9` y 8 dígitos, formateado en el navegador y validado en
+  el servidor (`+56 9 1234 5678`).
+
+### Corregido
+
+- `wrangler.toml` declara **todos** los dominios personalizados del Worker: al desplegar, wrangler elimina
+  los dominios que no estén en `routes` (incidente de 2026-11-18, ver docs/despliegue.md).
+
 ## [1.4.0] - 2026-11-18
 
 ### Añadido

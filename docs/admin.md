@@ -1,6 +1,6 @@
 # Panel de administración
 
-URL: `https://qualitypro-v2.asiquedo.cl/admin`
+URL: `https://qualitypro.cl/admin`
 
 ## Acceso
 
@@ -87,6 +87,9 @@ de producto no pasa por aquí: abre WhatsApp directamente.
 - **Configuración**: correos destino para contacto y para distribuidores (varios separados por coma) y
   remitente. El remitente debe pertenecer a un dominio verificado en Resend; las respuestas llegan al
   correo de la persona gracias al reply-to.
+- **Respuesta automática**: si está activa, la persona recibe un correo de confirmación (asunto y texto
+  editables por tipo, con `{{nombre}}` y `{{empresa}}`). Sus respuestas llegan al correo destino.
+- **Teléfono**: el campo fija el prefijo `+56 9` y acepta 8 dígitos; se guarda como `+56 9 1234 5678`.
 - Si Resend no está configurado o falla, el contacto se guarda igual y queda marcado "pendiente" o "error"
   con el detalle; nunca se pierde.
 - Protección anti-bots: campo trampa invisible, máximo 5 envíos por IP cada 15 minutos y, si está

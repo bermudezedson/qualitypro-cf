@@ -342,7 +342,7 @@ const fechaCl = (iso: string) => {
 	return isNaN(d.getTime()) ? iso : d.toLocaleString('es-CL', { timeZone: 'America/Santiago', dateStyle: 'short', timeStyle: 'short' });
 };
 
-export function vistaLeads(filas: FilaLead[], f: { tipo: string; estado: string; q: string }, correos: { contacto: string; distribuidor: string; remitente: string; resend: boolean; turnstile: boolean }): string {
+export function vistaLeads(filas: FilaLead[], f: { tipo: string; estado: string; q: string }, correos: { contacto: string; distribuidor: string; remitente: string; resend: boolean; turnstile: boolean; auto: { activa: boolean; contactoAsunto: string; contactoTexto: string; distribuidorAsunto: string; distribuidorTexto: string } }): string {
 	const sel = (a: string, b: string) => (a === b ? ' selected' : '');
 	return `<header class="cab"><h1>Contactos <small>${filas.length}</small></h1><a class="btn btn-sec" href="/admin/leads.csv?tipo=${esc(f.tipo)}&estado=${esc(f.estado)}&q=${encodeURIComponent(f.q)}">Exportar CSV</a></header>
 <form class="filtros" method="get" action="/admin/leads">
@@ -381,6 +381,19 @@ export function vistaLeads(filas: FilaLead[], f: { tipo: string; estado: string;
     </div>
     <label>Remitente<input name="remitente" type="text" value="${esc(correos.remitente)}" placeholder="Quality Pro &lt;web@qualitypro.cl&gt;"><small class="muted">Debe ser un dominio verificado en Resend. Las respuestas van directo al correo de la persona (reply-to).</small></label>
     <p class="muted">Estado: Resend ${correos.resend ? '<strong style="color:#1e6b32">configurado</strong>' : '<strong style="color:#8f1f16">sin API key</strong> (los contactos se guardan igual, pero no llega correo)'} · Turnstile ${correos.turnstile ? '<strong style="color:#1e6b32">activo</strong>' : 'no configurado (protección por honeypot y límite por IP)'}</p>
+    <h2 style="margin-top:22px">Respuesta automática al visitante</h2>
+    <label class="check" style="display:flex;align-items:center;gap:8px;font-weight:600"><input type="checkbox" name="auto_activa" value="1"${correos.auto.activa ? ' checked' : ''}> Enviar un correo de confirmación a quien escribe</label>
+    <p class="muted">Puedes usar <code>{{nombre}}</code> y <code>{{empresa}}</code>. Las respuestas del visitante llegan al correo destino correspondiente. Deja un campo vacío para usar el texto por defecto.</p>
+    <div class="grid2">
+      <div>
+        <label>Asunto (contacto)<input name="auto_contacto_asunto" type="text" value="${esc(correos.auto.contactoAsunto)}"></label>
+        <label>Mensaje (contacto)<textarea name="auto_contacto_texto" rows="9">${esc(correos.auto.contactoTexto)}</textarea></label>
+      </div>
+      <div>
+        <label>Asunto (distribuidor)<input name="auto_distribuidor_asunto" type="text" value="${esc(correos.auto.distribuidorAsunto)}"></label>
+        <label>Mensaje (distribuidor)<textarea name="auto_distribuidor_texto" rows="9">${esc(correos.auto.distribuidorTexto)}</textarea></label>
+      </div>
+    </div>
     <button type="submit" class="btn">Guardar configuración</button>
   </form>
 </section>`;

@@ -102,7 +102,7 @@ El mapa completo está en `src/redirecciones.json`; la lógica en `src/redirecci
 Un middleware de Hono (`src/index.ts`) evalúa `resolverRedireccion()` en cada GET antes del enrutado y
 responde `301` con `Cache-Control: public, max-age=3600`. Como el Worker atiende el dominio, no hace
 falta configurar reglas en Cloudflare; cuando `qualitypro.cl` apunte a este Worker, las redirecciones
-funcionan de inmediato. Hoy se pueden probar en `qualitypro-v2.asiquedo.cl` con los mismos paths.
+funcionan de inmediato. Están activas en `qualitypro.cl` desde el 2026-11-18.
 
 Mantenimiento:
 

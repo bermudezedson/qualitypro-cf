@@ -5,7 +5,7 @@ import { invalidarCache, normalizarCodigo } from '../db';
 import { parsearFicha, type Seccion } from '../ficha';
 import { cerrarSesion, crearSesion, requiereSesion, sesionValida, validarPassword } from './auth';
 import { CLAVES, getAjuste, porDefecto, setAjuste, type Archivo } from '../archivos';
-import { AJUSTES_CORREO, CORREO_DEFECTO, REMITENTE_DEFECTO } from '../formularios';
+import { AJUSTES_CORREO, AUTORESPUESTA_DEFECTO, CORREO_DEFECTO, REMITENTE_DEFECTO } from '../formularios';
 import {
 	layoutAdmin,
 	vistaCategorias,
@@ -488,7 +488,14 @@ admin.get('/leads', async (c) => {
 		distribuidor: (await getAjuste(c.env, AJUSTES_CORREO.distribuidor)) || CORREO_DEFECTO,
 		remitente: (await getAjuste(c.env, AJUSTES_CORREO.remitente)) || REMITENTE_DEFECTO,
 		resend: !!c.env.RESEND_API_KEY,
-		turnstile: !!c.env.TURNSTILE_SECRET
+		turnstile: !!c.env.TURNSTILE_SECRET,
+		auto: {
+			activa: (await getAjuste(c.env, AJUSTES_CORREO.autorespuesta)) !== '0',
+			contactoAsunto: (await getAjuste(c.env, AJUSTES_CORREO.autoContactoAsunto)) || AUTORESPUESTA_DEFECTO.contacto.asunto,
+			contactoTexto: (await getAjuste(c.env, AJUSTES_CORREO.autoContactoTexto)) || AUTORESPUESTA_DEFECTO.contacto.texto,
+			distribuidorAsunto: (await getAjuste(c.env, AJUSTES_CORREO.autoDistribuidorAsunto)) || AUTORESPUESTA_DEFECTO.distribuidor.asunto,
+			distribuidorTexto: (await getAjuste(c.env, AJUSTES_CORREO.autoDistribuidorTexto)) || AUTORESPUESTA_DEFECTO.distribuidor.texto
+		}
 	};
 	return c.html(layoutAdmin('Contactos', vistaLeads(filas, f, correos), { activo: 'leads', aviso: aviso(c) }));
 });
@@ -507,6 +514,12 @@ admin.post('/leads/configuracion', async (c) => {
 	await setAjuste(c.env, AJUSTES_CORREO.contacto, contacto || null);
 	await setAjuste(c.env, AJUSTES_CORREO.distribuidor, distribuidor || null);
 	await setAjuste(c.env, AJUSTES_CORREO.remitente, remitente || null);
+	await setAjuste(c.env, AJUSTES_CORREO.autorespuesta, b.auto_activa === '1' ? null : '0');
+	const oDefecto = (v: string, def: string) => (v && v !== def ? v : null);
+	await setAjuste(c.env, AJUSTES_CORREO.autoContactoAsunto, oDefecto(str(b.auto_contacto_asunto, 200), AUTORESPUESTA_DEFECTO.contacto.asunto));
+	await setAjuste(c.env, AJUSTES_CORREO.autoContactoTexto, oDefecto(str(b.auto_contacto_texto, 5000).replace(/\r\n/g, '\n'), AUTORESPUESTA_DEFECTO.contacto.texto));
+	await setAjuste(c.env, AJUSTES_CORREO.autoDistribuidorAsunto, oDefecto(str(b.auto_distribuidor_asunto, 200), AUTORESPUESTA_DEFECTO.distribuidor.asunto));
+	await setAjuste(c.env, AJUSTES_CORREO.autoDistribuidorTexto, oDefecto(str(b.auto_distribuidor_texto, 5000).replace(/\r\n/g, '\n'), AUTORESPUESTA_DEFECTO.distribuidor.texto));
 	return c.redirect(conAviso('/admin/leads', 'ok', 'Configuración guardada.'));
 });
 admin.get('/leads/:id', async (c) => {

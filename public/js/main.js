@@ -229,7 +229,30 @@
   }
 
   // Formularios de contacto y distribuidor -> endpoint del sitio (D1 + correo). Honeypot + Turnstile opcional.
+  // Teléfono: prefijo fijo "+56 9 " y 8 dígitos (formato +56 9 1234 5678)
+  function prepararTelefono(input) {
+    if (input.dataset.cl) return;
+    input.dataset.cl = "1";
+    input.type = "tel"; input.placeholder = "+56 9 1234 5678"; input.maxLength = 15; input.inputMode = "numeric";
+    var PREF = "+56 9 ";
+    var formatear = function () {
+      var crudo = input.value.indexOf(PREF.trim()) === 0 ? input.value.slice(PREF.trim().length) : input.value;
+      var d = crudo.replace(/\D/g, "");
+      if (d.length > 8 && d.indexOf("56") === 0) d = d.slice(2);
+      if (d.length === 9 && d.indexOf("9") === 0) d = d.slice(1);
+      d = d.slice(0, 8);
+      input.value = d ? PREF + d.slice(0, 4) + (d.length > 4 ? " " + d.slice(4) : "") : PREF;
+    };
+    input.addEventListener("focus", function () { if (!input.value) input.value = PREF; });
+    input.addEventListener("input", formatear);
+    input.addEventListener("blur", function () { if (input.value.trim() === PREF.trim()) input.value = ""; });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Backspace" && input.selectionStart <= PREF.length && input.value.length <= PREF.length) e.preventDefault();
+    });
+    if (input.value) formatear();
+  }
   function prepararFormulario(form) {
+    form.querySelectorAll('input[name="telefono"]').forEach(prepararTelefono);
     if (form.querySelector('[name="empresa_fax"]')) return;
     var hp = document.createElement("input");
     hp.type = "text"; hp.name = "empresa_fax"; hp.tabIndex = -1; hp.autocomplete = "off"; hp.setAttribute("aria-hidden", "true");
@@ -325,7 +348,10 @@
       enviarFormulario(form, "distribuidor", "¡Solicitud enviada! Nuestro equipo comercial se pondrá en contacto contigo.");
     });
   });
-  function prepararTodos() { formulariosEnvio.forEach(prepararFormulario); }
+  function prepararTodos() {
+    formulariosEnvio.forEach(prepararFormulario);
+    if (mini) mini.querySelectorAll('input[name="telefono"]').forEach(prepararTelefono);
+  }
   if (QP.turnstileKey && !window.turnstile) {
     var intentos = 0;
     var esperar = setInterval(function () { if (window.turnstile || ++intentos > 50) { clearInterval(esperar); prepararTodos(); } }, 100);

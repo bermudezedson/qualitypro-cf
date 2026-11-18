@@ -4,9 +4,9 @@ Sitio público y panel de administración de **Quality Pro** (nutrición y salud
 sobre la plataforma de Cloudflare: **Workers** (aplicación), **D1** (base de datos SQLite), **R2** (imágenes) y
 **Workers Static Assets** (CSS, JS, fuentes e imágenes del diseño).
 
-- Sitio: https://qualitypro-v2.asiquedo.cl
-- Panel: https://qualitypro-v2.asiquedo.cl/admin
-- Versión: **1.4.0** (ver [CHANGELOG](CHANGELOG.md))
+- Sitio: https://qualitypro.cl (alias que redirigen: www.qualitypro.cl, qualitypro-v2.asiquedo.cl)
+- Panel: https://qualitypro.cl/admin
+- Versión: **1.5.0** (ver [CHANGELOG](CHANGELOG.md))
 
 ## Stack
 

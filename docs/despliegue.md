@@ -5,16 +5,22 @@
 | Recurso | Nombre | Notas |
 | --- | --- | --- |
 | Worker | `qualitypro-v2` | Código + assets estáticos |
-| Dominio | `qualitypro-v2.asiquedo.cl` | Custom domain del Worker; Cloudflare crea el DNS y el certificado |
+| Dominios | `qualitypro.cl` (principal), `qualitypro-v2.asiquedo.cl` (alias) | Custom domains del Worker; Cloudflare crea el DNS y el certificado. `www.qualitypro.cl` redirige 301 |
 | D1 | `qualitypro-v2` | ID en `wrangler.toml` (`database_id`) |
 | R2 | `qualitypro-v2-media` | Fotos de productos |
 | Secrets | `ADMIN_PASSWORD`, `ADMIN_SECRET` | Panel de administración |
 | Secrets | `RESEND_API_KEY` | Correo de aviso de los formularios (Resend) |
 | Secrets / var | `TURNSTILE_SECRET` / `TURNSTILE_SITE_KEY` | Anti-bots Cloudflare Turnstile (opcional) |
-| Variable | `SITE_URL` | URL pública, usada en canonical, sitemap y JSON-LD |
+| Variable | `SITE_URL` | URL canónica (https://qualitypro.cl), usada en canonical, sitemap, JSON-LD y correos |
+| Variable | `HOSTS_ALIAS` | Hosts que redirigen 301 al canónico (www y dominio de pruebas) |
 
 Todo está declarado en `wrangler.toml`; `routes` con `custom_domain = true` debe ir a nivel raíz del
 archivo (si queda bajo `[vars]` se ignora).
+
+> **Importante:** `routes` es la lista autoritativa de dominios del Worker. En cada `wrangler deploy`,
+> wrangler **elimina** los dominios personalizados que no figuren ahí, incluidos los agregados a mano en
+> el panel de Cloudflare, y con ellos su registro DNS. Nunca agregues un dominio solo desde el panel: añádelo
+> a `routes` y despliega. (Incidente del 2026-11-18: qualitypro.cl estuvo caído unos minutos por esto.)
 
 ## Publicar
 
@@ -91,7 +97,7 @@ database_id = "…"
 
 y desplegar con `npx wrangler deploy --env staging`.
 
-## Checklist de puesta en producción (cuando reemplace al sitio actual)
+## Checklist de puesta en producción (realizada el 2026-11-18)
 
 1. Subir las fotos faltantes desde el panel.
 2. Cambiar `SITE_URL` y `routes` en `wrangler.toml` al dominio definitivo (por ejemplo `qualitypro.cl`) y
