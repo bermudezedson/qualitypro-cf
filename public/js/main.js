@@ -280,13 +280,36 @@
     msg.style.color = ok ? "#1e6b32" : "#8f1f16";
     msg.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
+  // Espera hasta 8 s a que Turnstile entregue su token (el desafío invisible tarda unos segundos)
+  function esperarToken(form) {
+    return new Promise(function (resolver) {
+      if (!QP.turnstileKey) return resolver(true);
+      var inicio = Date.now();
+      var t = setInterval(function () {
+        var campo = form.querySelector('[name="cf-turnstile-response"]');
+        if (campo && campo.value) { clearInterval(t); resolver(true); }
+        else if (Date.now() - inicio > 8000) { clearInterval(t); resolver(false); }
+      }, 150);
+    });
+  }
   function enviarFormulario(form, tipo, textoOk) {
     if (!form.reportValidity()) return;
     var boton = form.querySelector('button[type="submit"]');
+    if (boton) { boton.disabled = true; boton.dataset.texto = boton.textContent; boton.textContent = "Verificando…"; }
+    esperarToken(form).then(function (listo) {
+      if (!listo) {
+        if (boton) { boton.disabled = false; boton.textContent = boton.dataset.texto; }
+        mensajeFormulario(form, "Estamos verificando que eres una persona. Espera unos segundos e inténtalo de nuevo; si persiste, escríbenos por WhatsApp.", false);
+        return;
+      }
+      enviarDatos(form, tipo, textoOk, boton);
+    });
+  }
+  function enviarDatos(form, tipo, textoOk, boton) {
     var datos = {};
     new FormData(form).forEach(function (v, k) { datos[k] = v; });
     datos.origen = location.href;
-    if (boton) { boton.disabled = true; boton.dataset.texto = boton.textContent; boton.textContent = "Enviando…"; }
+    if (boton) { boton.disabled = true; boton.textContent = "Enviando…"; }
     fetch("/api/formularios/" + tipo, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) })
       .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
       .then(function (res) {
