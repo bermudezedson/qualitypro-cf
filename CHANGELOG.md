@@ -2,6 +2,13 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Versionado semántico.
 
+## [1.5.2] - 2026-11-18
+
+### Añadido
+
+- Cloudflare Turnstile activo en los formularios de contacto y distribuidor (`TURNSTILE_SITE_KEY` en
+  `wrangler.toml`, secret `TURNSTILE_SECRET`). Los envíos sin verificación válida se rechazan.
+
 ## [1.5.1] - 2026-11-18
 
 ### Corregido

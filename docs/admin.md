@@ -92,8 +92,8 @@ de producto no pasa por aquí: abre WhatsApp directamente.
 - **Teléfono**: el campo fija el prefijo `+56 9` y acepta 8 dígitos; se guarda como `+56 9 1234 5678`.
 - Si Resend no está configurado o falla, el contacto se guarda igual y queda marcado "pendiente" o "error"
   con el detalle; nunca se pierde.
-- Protección anti-bots: campo trampa invisible, máximo 5 envíos por IP cada 15 minutos y, si está
-  configurado, Cloudflare Turnstile (captcha invisible).
+- Protección anti-bots: campo trampa invisible, máximo 5 envíos por IP cada 15 minutos y Cloudflare
+  Turnstile (captcha invisible, activo desde el 2026-11-18; el widget se administra en Cloudflare → Turnstile).
 
 ## Archivos SEO
 

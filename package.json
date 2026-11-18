@@ -1,6 +1,6 @@
 {
 	"name": "qualitypro-v2",
-	"version": "1.5.1",
+	"version": "1.5.2",
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy",
