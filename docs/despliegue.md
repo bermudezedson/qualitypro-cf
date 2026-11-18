@@ -9,6 +9,8 @@
 | D1 | `qualitypro-v2` | ID en `wrangler.toml` (`database_id`) |
 | R2 | `qualitypro-v2-media` | Fotos de productos |
 | Secrets | `ADMIN_PASSWORD`, `ADMIN_SECRET` | Panel de administración |
+| Secrets | `RESEND_API_KEY` | Correo de aviso de los formularios (Resend) |
+| Secrets / var | `TURNSTILE_SECRET` / `TURNSTILE_SITE_KEY` | Anti-bots Cloudflare Turnstile (opcional) |
 | Variable | `SITE_URL` | URL pública, usada en canonical, sitemap y JSON-LD |
 
 Todo está declarado en `wrangler.toml`; `routes` con `custom_domain = true` debe ir a nivel raíz del
@@ -30,6 +32,8 @@ versión; se pueden ver con `npx wrangler deployments list` y volver atrás con
 ```bash
 npx wrangler secret put ADMIN_PASSWORD   # pide el valor por consola
 npx wrangler secret put ADMIN_SECRET     # cadena larga al azar: openssl rand -hex 32
+npx wrangler secret put RESEND_API_KEY    # API key de Resend (re_…)
+npx wrangler secret put TURNSTILE_SECRET  # secreto del widget Turnstile (opcional)
 npx wrangler secret list
 ```
 

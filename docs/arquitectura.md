@@ -20,8 +20,8 @@ Navegador ──HTTPS──▶ Cloudflare (dominio qualitypro-v2.asiquedo.cl, ce
 ```
 
 Todo corre en el borde de Cloudflare: no hay servidores propios, contenedores ni base de datos externa.
-Los formularios de contacto y distribuidor abren WhatsApp con el mensaje armado, igual que la plantilla,
-por lo que no requieren backend de correo.
+Los formularios de contacto y distribuidor se envían al Worker (`/api/formularios/*`), que los guarda en
+D1 y avisa por correo con Resend; la cotización de la ficha de producto abre WhatsApp.
 
 ## Flujo de una petición pública
 

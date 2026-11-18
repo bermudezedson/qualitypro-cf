@@ -16,6 +16,7 @@ export function layoutAdmin(titulo: string, cuerpo: string, opts: { activo?: str
     <a href="/admin" class="${opts.activo === 'inicio' ? 'activo' : ''}">Inicio</a>
     <a href="/admin/productos" class="${opts.activo === 'productos' ? 'activo' : ''}">Productos</a>
     <a href="/admin/categorias" class="${opts.activo === 'categorias' ? 'activo' : ''}">Categorías</a>
+    <a href="/admin/leads" class="${opts.activo === 'leads' ? 'activo' : ''}">Contactos</a>
     <a href="/admin/archivos" class="${opts.activo === 'archivos' ? 'activo' : ''}">Archivos SEO</a>
     <a href="/" target="_blank" rel="noopener">Ver sitio ↗</a>
   </nav>
@@ -62,7 +63,7 @@ export function vistaLogin(error: string | null, next: string): string {
 	);
 }
 
-export function vistaInicio(n: { productos: number; habilitados: number; conFoto: number; conFicha: number; categorias: number }): string {
+export function vistaInicio(n: { productos: number; habilitados: number; conFoto: number; conFicha: number; categorias: number; leadsNuevos: number }): string {
 	return `<header class="cab"><h1>Inicio</h1></header>
 <div class="tarjetas">
   <a class="kpi" href="/admin/productos"><strong>${n.productos}</strong><span>Productos</span></a>
@@ -70,6 +71,7 @@ export function vistaInicio(n: { productos: number; habilitados: number; conFoto
   <a class="kpi" href="/admin/productos?foto=sin"><strong>${n.productos - n.conFoto}</strong><span>Sin foto</span></a>
   <a class="kpi" href="/admin/productos?ficha=sin"><strong>${n.productos - n.conFicha}</strong><span>Sin ficha técnica</span></a>
   <a class="kpi" href="/admin/categorias"><strong>${n.categorias}</strong><span>Categorías</span></a>
+  <a class="kpi" href="/admin/leads?estado=nuevo"><strong>${n.leadsNuevos}</strong><span>Contactos nuevos</span></a>
 </div>
 <section class="panel">
   <h2>Cómo funciona</h2>
@@ -318,4 +320,87 @@ ${archivos
   <h2>sitemap.xml</h2>
   <p class="muted">Se genera automáticamente desde la base de datos (inicio, catálogo, especies y productos habilitados). <a href="/sitemap.xml" target="_blank" rel="noopener">Ver sitemap ↗</a></p>
 </section>`;
+}
+
+export interface FilaLead {
+	id: number;
+	tipo: string;
+	nombre: string;
+	email: string;
+	telefono: string | null;
+	empresa: string | null;
+	comuna: string | null;
+	mensaje: string | null;
+	estado: string;
+	correo_enviado: number;
+	correo_error: string | null;
+	created_at: string;
+}
+
+const fechaCl = (iso: string) => {
+	const d = new Date(iso.replace(' ', 'T') + (iso.endsWith('Z') ? '' : 'Z'));
+	return isNaN(d.getTime()) ? iso : d.toLocaleString('es-CL', { timeZone: 'America/Santiago', dateStyle: 'short', timeStyle: 'short' });
+};
+
+export function vistaLeads(filas: FilaLead[], f: { tipo: string; estado: string; q: string }, correos: { contacto: string; distribuidor: string; remitente: string; resend: boolean; turnstile: boolean }): string {
+	const sel = (a: string, b: string) => (a === b ? ' selected' : '');
+	return `<header class="cab"><h1>Contactos <small>${filas.length}</small></h1><a class="btn btn-sec" href="/admin/leads.csv?tipo=${esc(f.tipo)}&estado=${esc(f.estado)}&q=${encodeURIComponent(f.q)}">Exportar CSV</a></header>
+<form class="filtros" method="get" action="/admin/leads">
+  <input type="search" name="q" value="${esc(f.q)}" placeholder="Buscar por nombre, correo, empresa…">
+  <select name="tipo"><option value="">Contacto y distribuidor</option><option value="contacto"${sel(f.tipo, 'contacto')}>Contacto</option><option value="distribuidor"${sel(f.tipo, 'distribuidor')}>Distribuidor</option></select>
+  <select name="estado"><option value="">Todos los estados</option><option value="nuevo"${sel(f.estado, 'nuevo')}>Nuevos</option><option value="atendido"${sel(f.estado, 'atendido')}>Atendidos</option><option value="descartado"${sel(f.estado, 'descartado')}>Descartados</option></select>
+  <button type="submit" class="btn btn-sec">Filtrar</button>
+</form>
+<table class="tabla">
+  <thead><tr><th>Fecha</th><th>Tipo</th><th>Nombre / empresa</th><th>Contacto</th><th>Mensaje</th><th>Correo</th><th>Estado</th></tr></thead>
+  <tbody>${
+		filas.length
+			? filas
+					.map(
+						(l) => `<tr>
+    <td class="muted" style="white-space:nowrap">${esc(fechaCl(l.created_at))}</td>
+    <td><span class="badge">${esc(l.tipo)}</span></td>
+    <td><a href="/admin/leads/${l.id}"><strong>${esc(l.nombre)}</strong></a>${l.empresa ? `<br><small class="muted">${esc(l.empresa)}${l.comuna ? ' · ' + esc(l.comuna) : ''}</small>` : ''}</td>
+    <td><a href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.telefono ? `<br><small class="muted">${esc(l.telefono)}</small>` : ''}</td>
+    <td class="muted" style="max-width:320px">${esc((l.mensaje ?? '').slice(0, 110))}${(l.mensaje ?? '').length > 110 ? '…' : ''}</td>
+    <td title="${esc(l.correo_error ?? '')}">${l.correo_enviado ? '✓ enviado' : `<span style="color:#8f1f16">✗ ${l.correo_error ? 'error' : 'pendiente'}</span>`}</td>
+    <td><span class="badge badge-${l.estado === 'nuevo' ? 'habilitado' : l.estado === 'atendido' ? 'deshabilitado' : 'eliminado'}">${esc(l.estado)}</span></td>
+  </tr>`
+					)
+					.join('')
+			: '<tr><td colspan="7" class="vacio">No hay contactos con esos filtros.</td></tr>'
+	}</tbody>
+</table>
+
+<section class="panel" style="margin-top:22px">
+  <h2>Configuración de los formularios</h2>
+  <form method="post" action="/admin/leads/configuracion" class="form">
+    <div class="grid2">
+      <label>Correo destino: formulario de contacto<input name="contacto" type="text" value="${esc(correos.contacto)}" placeholder="contacto@qualitypro.cl"><small class="muted">Varios correos separados por coma.</small></label>
+      <label>Correo destino: solicitudes de distribuidor<input name="distribuidor" type="text" value="${esc(correos.distribuidor)}" placeholder="ventas@qualitypro.cl"></label>
+    </div>
+    <label>Remitente<input name="remitente" type="text" value="${esc(correos.remitente)}" placeholder="Quality Pro &lt;web@qualitypro.cl&gt;"><small class="muted">Debe ser un dominio verificado en Resend. Las respuestas van directo al correo de la persona (reply-to).</small></label>
+    <p class="muted">Estado: Resend ${correos.resend ? '<strong style="color:#1e6b32">configurado</strong>' : '<strong style="color:#8f1f16">sin API key</strong> (los contactos se guardan igual, pero no llega correo)'} · Turnstile ${correos.turnstile ? '<strong style="color:#1e6b32">activo</strong>' : 'no configurado (protección por honeypot y límite por IP)'}</p>
+    <button type="submit" class="btn">Guardar configuración</button>
+  </form>
+</section>`;
+}
+
+export function vistaLead(l: FilaLead & { rut: string | null; giro: string | null; sitio_web: string | null; origen: string | null; ip: string | null; user_agent: string | null }): string {
+	const fila = (k: string, v: string | null, link?: string) => (v ? `<tr><th style="text-align:left;padding:8px 12px;color:var(--muted);white-space:nowrap;vertical-align:top">${esc(k)}</th><td style="padding:8px 12px">${link ? `<a href="${esc(link)}">${esc(v)}</a>` : esc(v).replace(/\n/g, '<br>')}</td></tr>` : '');
+	return `<header class="cab"><h1>${esc(l.nombre)} <small>${esc(l.tipo)} · #${l.id}</small></h1><a class="btn btn-sec" href="/admin/leads">Volver</a></header>
+<div class="grid2">
+<section class="panel"><h2>Datos</h2><table style="width:100%;border-collapse:collapse;font-size:.95rem">
+${fila('Fecha', fechaCl(l.created_at))}${fila('Empresa', l.empresa)}${fila('RUT', l.rut)}${fila('Giro', l.giro)}${fila('Comuna', l.comuna)}${fila('Correo', l.email, `mailto:${l.email}`)}${fila('Teléfono', l.telefono, `tel:${l.telefono}`)}${fila('Sitio web', l.sitio_web, l.sitio_web ?? undefined)}${fila(l.tipo === 'contacto' ? 'Mensaje' : 'Productos de interés', l.mensaje)}${fila('Página de origen', l.origen)}
+</table></section>
+<section class="panel"><h2>Seguimiento</h2>
+  <p>Correo de aviso: ${l.correo_enviado ? '<strong style="color:#1e6b32">enviado</strong>' : `<strong style="color:#8f1f16">no enviado</strong>${l.correo_error ? `<br><small class="muted">${esc(l.correo_error)}</small>` : ''}`}</p>
+  <form method="post" action="/admin/leads/${l.id}/estado" class="form">
+    <label>Estado<select name="estado"><option value="nuevo"${l.estado === 'nuevo' ? ' selected' : ''}>Nuevo</option><option value="atendido"${l.estado === 'atendido' ? ' selected' : ''}>Atendido</option><option value="descartado"${l.estado === 'descartado' ? ' selected' : ''}>Descartado</option></select></label>
+    <button type="submit" class="btn">Guardar</button>
+  </form>
+  <p class="muted" style="margin-top:14px">IP ${esc(l.ip ?? '-')}<br><small>${esc(l.user_agent ?? '')}</small></p>
+  <a class="btn btn-sec" href="mailto:${esc(l.email)}?subject=${encodeURIComponent('Re: ' + (l.tipo === 'contacto' ? 'tu mensaje a Quality Pro' : 'tu solicitud de distribución Quality Pro'))}">Responder por correo</a>
+</section>
+</div>`;
 }

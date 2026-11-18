@@ -7,6 +7,7 @@ import { parsearFicha, renderPaneles, renderTabs, resumenFicha } from './ficha';
 import { esc } from './html';
 import { resolverRedireccion } from './redirecciones';
 import { contenidoArchivo } from './archivos';
+import { guardarLead, notificarLead, superaLimite, validarLead, verificarTurnstile, type TipoLead } from './formularios';
 import {
 	filtrarProductos,
 	layout,
@@ -30,7 +31,7 @@ function html(c: Ctx, meta: Meta, cuerpo: (cat: Awaited<ReturnType<typeof getCat
 	return (async () => {
 		const cat = await getCatalogo(c.env);
 		c.header('Cache-Control', status === 200 ? CACHE_PAGINA : 'no-store');
-		return c.html(layout(meta, c.env.SITE_URL, cat, cuerpo(cat)), status);
+		return c.html(layout(meta, c.env.SITE_URL, cat, cuerpo(cat), c.env.TURNSTILE_SITE_KEY), status);
 	})();
 }
 
@@ -258,6 +259,25 @@ app.get('/sitemap.xml', async (c) => {
 		.join('\n')}\n</urlset>`;
 	c.header('Cache-Control', 'public, max-age=3600');
 	return c.body(xml, 200, { 'Content-Type': 'application/xml; charset=utf-8' });
+});
+
+// ---- Formularios: contacto y distribuidor (la cotización de la ficha sigue por WhatsApp)
+app.post('/api/formularios/:tipo', async (c) => {
+	const tipo = c.req.param('tipo') as TipoLead;
+	if (tipo !== 'contacto' && tipo !== 'distribuidor') return c.json({ ok: false, error: 'Formulario desconocido.' }, 404);
+	const ct = c.req.header('content-type') ?? '';
+	const body = (ct.includes('application/json') ? await c.req.json().catch(() => ({})) : await c.req.parseBody()) as Record<string, unknown>;
+	const ip = c.req.header('cf-connecting-ip') ?? c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0].trim() ?? null;
+
+	const v = validarLead(tipo, body);
+	if ('error' in v) return v.error === 'spam' ? c.json({ ok: true }) : c.json({ ok: false, error: v.error }, 400);
+	if (await superaLimite(c.env, ip)) return c.json({ ok: false, error: 'Has enviado demasiados mensajes en poco tiempo. Intenta más tarde o escríbenos por WhatsApp.' }, 429);
+	if (!(await verificarTurnstile(c.env, String(body['cf-turnstile-response'] ?? ''), ip)))
+		return c.json({ ok: false, error: 'No pudimos verificar que eres una persona. Recarga la página e inténtalo de nuevo.' }, 400);
+
+	const id = await guardarLead(c.env, v.lead, ip, c.req.header('User-Agent') ?? null);
+	c.executionCtx.waitUntil(notificarLead(c.env, id, v.lead));
+	return c.json({ ok: true, id });
 });
 
 // ---- robots.txt y llms.txt (editables desde /admin/archivos)

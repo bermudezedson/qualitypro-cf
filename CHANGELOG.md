@@ -2,6 +2,23 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Versionado semántico.
 
+## [1.4.0] - 2026-11-18
+
+### Añadido
+
+- Formularios de contacto y distribuidor (corto y completo) con envío real: `POST /api/formularios/<tipo>`
+  valida, guarda en la tabla `leads` de D1 (migración `0004`) y avisa por correo con Resend (reply-to al
+  visitante). La cotización de la ficha de producto se mantiene por WhatsApp.
+- Anti-bots: campo trampa (honeypot), límite de 5 envíos por IP cada 15 minutos y Cloudflare Turnstile
+  opcional (`TURNSTILE_SITE_KEY` + secret `TURNSTILE_SECRET`).
+- Panel **Contactos**: bandeja con filtros, detalle, estado (nuevo / atendido / descartado), exportación CSV
+  y configuración de correos destino y remitente. Contador de contactos nuevos en el inicio.
+
+### Cambiado
+
+- `js/main.js`: los formularios envían por `fetch` y muestran confirmación o error en línea; ya no abren
+  WhatsApp salvo la cotización de producto.
+
 ## [1.3.0] - 2026-11-17
 
 ### Añadido

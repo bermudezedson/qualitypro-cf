@@ -76,6 +76,22 @@ Listado con nombre visible, línea, URL, cantidad de productos habilitados y est
 Los íconos y fondos de cada especie forman parte del diseño (`src/render.ts`); una especie nueva usa un
 ícono genérico y el fondo por defecto hasta que se agregue al código.
 
+## Contactos
+
+Bandeja de los formularios del sitio (contacto y solicitudes de distribuidor). La cotización de la ficha
+de producto no pasa por aquí: abre WhatsApp directamente.
+
+- Filtros por tipo, estado y texto; exportación a CSV (separado por `;`, abre bien en Excel).
+- Cada contacto muestra fecha (hora de Chile), datos, página de origen, si el correo de aviso se envió y
+  un botón para responder por correo. El estado (nuevo, atendido, descartado) sirve para el seguimiento.
+- **Configuración**: correos destino para contacto y para distribuidores (varios separados por coma) y
+  remitente. El remitente debe pertenecer a un dominio verificado en Resend; las respuestas llegan al
+  correo de la persona gracias al reply-to.
+- Si Resend no está configurado o falla, el contacto se guarda igual y queda marcado "pendiente" o "error"
+  con el detalle; nunca se pierde.
+- Protección anti-bots: campo trampa invisible, máximo 5 envíos por IP cada 15 minutos y, si está
+  configurado, Cloudflare Turnstile (captcha invisible).
+
 ## Archivos SEO
 
 Edita `robots.txt` y `llms.txt`, que el sitio sirve en su raíz.

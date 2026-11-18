@@ -5,6 +5,7 @@ import { invalidarCache, normalizarCodigo } from '../db';
 import { parsearFicha, type Seccion } from '../ficha';
 import { cerrarSesion, crearSesion, requiereSesion, sesionValida, validarPassword } from './auth';
 import { CLAVES, getAjuste, porDefecto, setAjuste, type Archivo } from '../archivos';
+import { AJUSTES_CORREO, CORREO_DEFECTO, REMITENTE_DEFECTO } from '../formularios';
 import {
 	layoutAdmin,
 	vistaCategorias,
@@ -12,10 +13,13 @@ import {
 	vistaFormProducto,
 	vistaArchivos,
 	vistaInicio,
+	vistaLead,
+	vistaLeads,
 	vistaLogin,
 	vistaProductos,
 	type Aviso,
 	type FilaCategoria,
+	type FilaLead,
 	type FilaProducto
 } from './views';
 
@@ -145,8 +149,9 @@ admin.get('/', async (c) => {
 		        (SELECT COUNT(*) FROM productos WHERE producto_estado = 'habilitado') habilitados,
 		        (SELECT COUNT(*) FROM productos p WHERE producto_estado <> 'eliminado' AND EXISTS (SELECT 1 FROM productos_fotos f WHERE f.producto_id = p.producto_id)) conFoto,
 		        (SELECT COUNT(*) FROM productos p WHERE producto_estado <> 'eliminado' AND EXISTS (SELECT 1 FROM ficha f WHERE REPLACE(UPPER(f.codigo),' ','') = REPLACE(UPPER(p.producto_sku),' ',''))) conFicha,
-		        (SELECT COUNT(*) FROM categorias WHERE categoria_estado = 'habilitada') categorias`
-	).first<{ productos: number; habilitados: number; conFoto: number; conFicha: number; categorias: number }>();
+		        (SELECT COUNT(*) FROM categorias WHERE categoria_estado = 'habilitada') categorias,
+		        (SELECT COUNT(*) FROM leads WHERE estado = 'nuevo') leadsNuevos`
+	).first<{ productos: number; habilitados: number; conFoto: number; conFicha: number; categorias: number; leadsNuevos: number }>();
 	return c.html(layoutAdmin('Inicio', vistaInicio(n!), { activo: 'inicio', aviso: aviso(c) }));
 });
 
@@ -461,6 +466,60 @@ admin.post('/archivos', async (c) => {
 	if (contenido.length > 200_000) return c.redirect(conAviso('/admin/archivos', 'error', 'El contenido supera los 200 000 caracteres.'));
 	await setAjuste(c.env, nombre, contenido);
 	return c.redirect(conAviso('/admin/archivos', 'ok', `${nombre} guardado.`));
+});
+
+// ---------------------------------------------------------------- contactos (leads)
+async function consultarLeads(env: Env, f: { tipo: string; estado: string; q: string }, limite = 500) {
+	const cond: string[] = [];
+	const args: unknown[] = [];
+	if (f.tipo === 'contacto' || f.tipo === 'distribuidor') { cond.push('tipo = ?'); args.push(f.tipo); }
+	if (['nuevo', 'atendido', 'descartado'].includes(f.estado)) { cond.push('estado = ?'); args.push(f.estado); }
+	if (f.q) { cond.push('(nombre LIKE ? OR email LIKE ? OR empresa LIKE ? OR mensaje LIKE ?)'); args.push(`%${f.q}%`, `%${f.q}%`, `%${f.q}%`, `%${f.q}%`); }
+	const sql = `SELECT id, tipo, nombre, email, telefono, empresa, rut, giro, comuna, sitio_web, mensaje, origen, ip, user_agent, estado, correo_enviado, correo_error, created_at FROM leads ${cond.length ? 'WHERE ' + cond.join(' AND ') : ''} ORDER BY created_at DESC LIMIT ${limite}`;
+	return (await env.DB.prepare(sql).bind(...args).all<FilaLead & { rut: string | null; giro: string | null; sitio_web: string | null; origen: string | null; ip: string | null; user_agent: string | null }>()).results;
+}
+const filtrosLeads = (c: { req: { query: (k: string) => string | undefined } }) => ({ tipo: str(c.req.query('tipo'), 20), estado: str(c.req.query('estado'), 20), q: str(c.req.query('q'), 80) });
+
+admin.get('/leads', async (c) => {
+	const f = filtrosLeads(c);
+	const filas = await consultarLeads(c.env, f);
+	const correos = {
+		contacto: (await getAjuste(c.env, AJUSTES_CORREO.contacto)) || CORREO_DEFECTO,
+		distribuidor: (await getAjuste(c.env, AJUSTES_CORREO.distribuidor)) || CORREO_DEFECTO,
+		remitente: (await getAjuste(c.env, AJUSTES_CORREO.remitente)) || REMITENTE_DEFECTO,
+		resend: !!c.env.RESEND_API_KEY,
+		turnstile: !!c.env.TURNSTILE_SECRET
+	};
+	return c.html(layoutAdmin('Contactos', vistaLeads(filas, f, correos), { activo: 'leads', aviso: aviso(c) }));
+});
+admin.get('/leads.csv', async (c) => {
+	const filas = await consultarLeads(c.env, filtrosLeads(c), 5000);
+	const cols = ['id', 'created_at', 'tipo', 'estado', 'nombre', 'email', 'telefono', 'empresa', 'rut', 'giro', 'comuna', 'sitio_web', 'mensaje', 'origen', 'correo_enviado'] as const;
+	const celda = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+	const csv = '\uFEFF' + [cols.join(';'), ...filas.map((l) => cols.map((k) => celda((l as unknown as Record<string, unknown>)[k])).join(';'))].join('\r\n');
+	return c.body(csv, 200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="contactos-${new Date().toISOString().slice(0, 10)}.csv"` });
+});
+admin.post('/leads/configuracion', async (c) => {
+	const b = await c.req.parseBody();
+	const correoValido = (v: string) => v.split(/[,;]\s*/).every((x) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x));
+	const contacto = str(b.contacto), distribuidor = str(b.distribuidor), remitente = str(b.remitente);
+	if ((contacto && !correoValido(contacto)) || (distribuidor && !correoValido(distribuidor))) return c.redirect(conAviso('/admin/leads', 'error', 'Revisa los correos destino.'));
+	await setAjuste(c.env, AJUSTES_CORREO.contacto, contacto || null);
+	await setAjuste(c.env, AJUSTES_CORREO.distribuidor, distribuidor || null);
+	await setAjuste(c.env, AJUSTES_CORREO.remitente, remitente || null);
+	return c.redirect(conAviso('/admin/leads', 'ok', 'Configuración guardada.'));
+});
+admin.get('/leads/:id', async (c) => {
+	const l = (await consultarLeads(c.env, { tipo: '', estado: '', q: '' }, 5000)).find((x) => x.id === Number(c.req.param('id')));
+	if (!l) return c.notFound();
+	return c.html(layoutAdmin(`Contacto #${l.id}`, vistaLead(l), { activo: 'leads', aviso: aviso(c) }));
+});
+admin.post('/leads/:id/estado', async (c) => {
+	const id = Number(c.req.param('id'));
+	const estado = str((await c.req.parseBody()).estado, 20);
+	if (!['nuevo', 'atendido', 'descartado'].includes(estado)) return c.redirect(`/admin/leads/${id}`);
+	await c.env.DB.prepare('UPDATE leads SET estado = ? WHERE id = ?').bind(estado, id).run();
+	return c.redirect(conAviso(`/admin/leads/${id}`, 'ok', 'Estado actualizado.'));
 });
 
 admin.notFound((c) => c.html(layoutAdmin('No encontrado', '<header class="cab"><h1>No encontrado</h1></header><p><a href="/admin">Volver al inicio</a></p>'), 404));

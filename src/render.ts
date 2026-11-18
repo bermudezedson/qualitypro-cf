@@ -96,7 +96,7 @@ function datosCliente(cat: Catalogo) {
 	};
 }
 
-export function layout(meta: Meta, siteUrl: string, cat: Catalogo, contenido: string): string {
+export function layout(meta: Meta, siteUrl: string, cat: Catalogo, contenido: string, turnstileKey?: string): string {
 	const canonical = siteUrl + meta.ruta;
 	const og = meta.og ?? {};
 	return `<!DOCTYPE html>
@@ -123,7 +123,8 @@ ${meta.noindex ? '<meta name="robots" content="noindex, follow">' : ''}
 <link rel="stylesheet" href="/css/styles.css">
 <link rel="stylesheet" href="/css/extra.css">
 ${(meta.jsonLd ?? []).map((j) => `<script type="application/ld+json">${jsonScript(j)}</script>`).join('\n')}
-<script>window.QP_DATA=${jsonScript(datosCliente(cat))};</script>
+<script>window.QP_DATA=${jsonScript({ ...datosCliente(cat), turnstileKey: turnstileKey ?? null })};</script>
+${turnstileKey ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>' : ''}
 <script defer src="/js/main.js"></script>
 </head>
 <body>

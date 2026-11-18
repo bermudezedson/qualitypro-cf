@@ -89,6 +89,12 @@ como autor. No se usa para autenticación (el panel usa secrets del Worker).
 `clave` (PK), `valor`, `updated_at`. Guarda contenidos editables del panel: hoy `robots.txt` y `llms.txt`
 (ver `src/archivos.ts`). Si no hay fila, el sitio sirve el valor por defecto.
 
+### leads
+
+Contactos de los formularios: `tipo` (contacto/distribuidor), datos de la persona y empresa, `mensaje`
+(o productos de interés), `origen`, `ip`, `user_agent`, `estado`, `correo_enviado`, `correo_error`,
+`created_at`. Índices por fecha y por IP + fecha (límite de envíos).
+
 ### Heredadas sin uso en v2
 
 `sliders`, `articulos`, `articulos_categorias`, `categorias_articulos`. Se conservan por si se recupera

@@ -22,3 +22,6 @@ binding = "ASSETS"
 
 [vars]
 SITE_URL = "https://qualitypro-v2.asiquedo.cl"
+# Clave pública del widget de Cloudflare Turnstile (anti-bots de los formularios). El secreto va en
+# `wrangler secret put TURNSTILE_SECRET`. Sin estas claves, los formularios usan honeypot + límite por IP.
+# TURNSTILE_SITE_KEY = "0x4AAAAAAA..."

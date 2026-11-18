@@ -228,15 +228,61 @@
     });
   }
 
-  // Formulario de contacto -> WhatsApp
+  // Formularios de contacto y distribuidor -> endpoint del sitio (D1 + correo). Honeypot + Turnstile opcional.
+  function prepararFormulario(form) {
+    if (form.querySelector('[name="empresa_fax"]')) return;
+    var hp = document.createElement("input");
+    hp.type = "text"; hp.name = "empresa_fax"; hp.tabIndex = -1; hp.autocomplete = "off"; hp.setAttribute("aria-hidden", "true");
+    hp.style.cssText = "position:absolute;left:-9999px;width:1px;height:1px;opacity:0";
+    form.appendChild(hp);
+    var boton = form.querySelector('button[type="submit"]');
+    if (QP.turnstileKey && boton && window.turnstile) {
+      var cont = document.createElement("div");
+      cont.className = "mb-4";
+      boton.parentNode.insertBefore(cont, boton);
+      window.turnstile.render(cont, { sitekey: QP.turnstileKey, language: "es" });
+    }
+  }
+  function mensajeFormulario(form, texto, ok) {
+    var msg = form.querySelector("[data-form-msg]");
+    if (!msg) {
+      msg = document.createElement("p");
+      msg.setAttribute("data-form-msg", "");
+      msg.setAttribute("role", "status");
+      msg.className = "mt-3 rounded-md px-4 py-3 text-sm font-semibold";
+      form.appendChild(msg);
+    }
+    msg.textContent = texto;
+    msg.style.background = ok ? "#e4f5e8" : "#fdecea";
+    msg.style.color = ok ? "#1e6b32" : "#8f1f16";
+    msg.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  function enviarFormulario(form, tipo, textoOk) {
+    if (!form.reportValidity()) return;
+    var boton = form.querySelector('button[type="submit"]');
+    var datos = {};
+    new FormData(form).forEach(function (v, k) { datos[k] = v; });
+    datos.origen = location.href;
+    if (boton) { boton.disabled = true; boton.dataset.texto = boton.textContent; boton.textContent = "Enviando…"; }
+    fetch("/api/formularios/" + tipo, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+      .then(function (res) {
+        if (res.ok) { form.reset(); mensajeFormulario(form, textoOk, true); }
+        else mensajeFormulario(form, res.error || "No pudimos enviar el mensaje. Inténtalo de nuevo o escríbenos por WhatsApp.", false);
+      })
+      .catch(function () { mensajeFormulario(form, "Sin conexión. Inténtalo de nuevo o escríbenos por WhatsApp.", false); })
+      .then(function () {
+        if (boton) { boton.disabled = false; boton.textContent = boton.dataset.texto; }
+        if (window.turnstile) { try { window.turnstile.reset(); } catch (e) {} }
+      });
+  }
+  var formulariosEnvio = [];
   var contactForm = document.querySelector("[data-contact-form]");
   if (contactForm) {
+    formulariosEnvio.push(contactForm);
     contactForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      if (!contactForm.reportValidity()) return;
-      var d = new FormData(contactForm);
-      var text = "Hola Quality Pro, soy " + d.get("nombre") + " (" + d.get("email") + (d.get("telefono") ? ", tel " + d.get("telefono") : "") + "). " + d.get("mensaje");
-      window.open(WA + "?text=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
+      enviarFormulario(contactForm, "contacto", "¡Gracias! Recibimos tu mensaje y te responderemos a la brevedad.");
     });
   }
 
@@ -271,18 +317,17 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
   }
 
-  // Formulario completo de distribuidor -> WhatsApp
+  // Formulario completo de distribuidor -> endpoint del sitio
   document.querySelectorAll("[data-distributor-form]").forEach(function (form) {
+    formulariosEnvio.push(form);
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      if (!form.reportValidity()) return;
-      var d = new FormData(form);
-      var text = "Hola Quality Pro, quiero ser distribuidor.\n" +
-        "Empresa: " + d.get("empresa") + "\nRUT: " + d.get("rut") + "\nGiro: " + d.get("giro") +
-        "\nComuna: " + d.get("comuna") + "\nContacto: " + d.get("nombre") + "\nEmail: " + d.get("email") +
-        "\nTeléfono: " + d.get("telefono") + (d.get("sitio_web") ? "\nSitio web: " + d.get("sitio_web") : "") +
-        "\nProductos de interés: " + d.get("productos_interes");
-      window.open(WA + "?text=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
+      enviarFormulario(form, "distribuidor", "¡Solicitud enviada! Nuestro equipo comercial se pondrá en contacto contigo.");
     });
   });
+  function prepararTodos() { formulariosEnvio.forEach(prepararFormulario); }
+  if (QP.turnstileKey && !window.turnstile) {
+    var intentos = 0;
+    var esperar = setInterval(function () { if (window.turnstile || ++intentos > 50) { clearInterval(esperar); prepararTodos(); } }, 100);
+  } else prepararTodos();
 })();

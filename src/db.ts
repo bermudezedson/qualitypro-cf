@@ -7,6 +7,9 @@ export interface Env {
 	SITE_URL: string;
 	ADMIN_PASSWORD: string;
 	ADMIN_SECRET: string;
+	RESEND_API_KEY?: string; // secret: aviso por correo de los formularios
+	TURNSTILE_SECRET?: string; // secret: verificación anti-bots (opcional)
+	TURNSTILE_SITE_KEY?: string; // var pública: clave del widget Turnstile (opcional)
 }
 
 export interface Categoria {
