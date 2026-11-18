@@ -42,11 +42,15 @@ B12) y conectores en minúscula.
 
 ## Inventario del sitio actual (qualitypro.cl, WordPress + WooCommerce)
 
-Fuente: `sitemap_index.xml`, `product-sitemap.xml`, `post-sitemap.xml`, `category-sitemap.xml` y el menú.
+Fuente: `sitemap_index.xml`, `product-sitemap.xml`, `post-sitemap.xml`, `category-sitemap.xml`, el menú y un
+rastreo completo del sitio (119 URLs únicas, guardadas en `db/produccion-urls-2026-11.txt`). Todas las URLs
+del rastreo se verificaron contra producción el 2026-11-18: 301 en un solo salto hacia una página 200,
+salvo `/cdn-cgi/l/email-protection`, que es un recurso interno de Cloudflare.
 
 | Tipo | Cantidad | Patrón | Destino en la v2 |
 | --- | --- | --- | --- |
 | Categorías | 10 | `/p/<slug>/` | `/catalogo/<slug v2>` |
+| Subcategorías WooCommerce | 16 | `/a/alimento-para-<especie>/`, `/a/salud-animal-para-<especie>/` (+ `?product-page=N`) | `/catalogo/<slug v2>` de la especie, sin paginación |
 | Productos | 76 | `/n/<slug>/` | `/producto/<slug v2>` (62) o la categoría de la especie (14) |
 | Listado | 1 | `/salud-y-nutricion-animal/` | `/catalogo` |
 | Blog | 1 + 5 entradas | `/category/blog/`, `/<entrada>/` | inicio o el producto del que habla la entrada |
@@ -104,6 +108,9 @@ responde `301` con `Cache-Control: public, max-age=3600`. Como el Worker atiende
 falta configurar reglas en Cloudflare; cuando `qualitypro.cl` apunte a este Worker, las redirecciones
 funcionan de inmediato. Están activas en `qualitypro.cl` desde el 2026-11-18.
 
+Los parámetros `product-page`, `paged`, `orderby`, `add-to-cart`, `min_price` y `max_price` se descartan en
+cualquier redirección.
+
 Mantenimiento:
 
 ```bash
@@ -114,8 +121,8 @@ npm run deploy
 Pruebas rápidas:
 
 ```bash
-for p in /p/avicola/ /n/potenza-massima/ /salud-y-nutricion-animal/ '/catalogo?categoria=aves'; do
-  curl -s -o /dev/null -w "$p -> %{http_code} %{redirect_url}\n" "https://qualitypro-v2.asiquedo.cl$p"; done
+# Verifica todas las URLs del rastreo: deben terminar en 200 con un solo salto
+while read -r p; do curl -s -o /dev/null -L -w "$p -> %{http_code} saltos=%{num_redirects} %{url_effective}\n" "https://qualitypro.cl$p"; done < db/produccion-urls-2026-11.txt
 ```
 
 ## Checklist para el cambio de dominio

@@ -2,6 +2,14 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Versionado semántico.
 
+## [1.5.1] - 2026-11-18
+
+### Corregido
+
+- Redirecciones 301 para las subcategorías de WooCommerce `/a/alimento-para-<especie>/` y
+  `/a/salud-animal-para-<especie>/` (no estaban en los sitemaps) y descarte de parámetros de paginación
+  (`product-page`, `paged`, `orderby`…). Las 119 URLs del rastreo del sitio anterior terminan en 200.
+
 ## [1.5.0] - 2026-11-18
 
 ### Puesta en producción

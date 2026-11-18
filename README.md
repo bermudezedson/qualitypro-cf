@@ -6,7 +6,7 @@ sobre la plataforma de Cloudflare: **Workers** (aplicación), **D1** (base de da
 
 - Sitio: https://qualitypro.cl (alias que redirigen: www.qualitypro.cl, qualitypro-v2.asiquedo.cl)
 - Panel: https://qualitypro.cl/admin
-- Versión: **1.5.0** (ver [CHANGELOG](CHANGELOG.md))
+- Versión: **1.5.1** (ver [CHANGELOG](CHANGELOG.md))
 
 ## Stack
 
