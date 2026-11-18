@@ -5,6 +5,7 @@ export interface Env {
 	MEDIA: R2Bucket;
 	ASSETS: Fetcher;
 	SITE_URL: string;
+	HOSTS_ALIAS?: string; // hosts separados por coma que redirigen 301 al dominio de SITE_URL (www, dominio de pruebas)
 	ADMIN_PASSWORD: string;
 	ADMIN_SECRET: string;
 	RESEND_API_KEY?: string; // secret: aviso por correo de los formularios

@@ -21,7 +21,10 @@ directory = "./public"
 binding = "ASSETS"
 
 [vars]
+# Dominio canónico del sitio. Al pasar a producción: SITE_URL = "https://qualitypro.cl" y
+# HOSTS_ALIAS = "www.qualitypro.cl,qualitypro-v2.asiquedo.cl" (esos hosts redirigen 301 al canónico).
 SITE_URL = "https://qualitypro-v2.asiquedo.cl"
+HOSTS_ALIAS = ""
 # Clave pública del widget de Cloudflare Turnstile (anti-bots de los formularios). El secreto va en
 # `wrangler secret put TURNSTILE_SECRET`. Sin estas claves, los formularios usan honeypot + límite por IP.
 # TURNSTILE_SITE_KEY = "0x4AAAAAAA..."

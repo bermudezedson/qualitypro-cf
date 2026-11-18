@@ -38,6 +38,17 @@ function html(c: Ctx, meta: Meta, cuerpo: (cat: Awaited<ReturnType<typeof getCat
 // ---- Panel de administración
 app.route('/admin', admin);
 
+// ---- Dominio canónico: www y dominio de pruebas redirigen 301 al dominio de SITE_URL (HOSTS_ALIAS)
+app.use('*', async (c, next) => {
+	const alias = (c.env.HOSTS_ALIAS ?? '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+	const url = new URL(c.req.url);
+	if (alias.length && alias.includes(url.hostname.toLowerCase()) && (c.req.method === 'GET' || c.req.method === 'HEAD')) {
+		c.header('Cache-Control', 'public, max-age=3600');
+		return c.redirect(c.env.SITE_URL.replace(/\/$/, '') + url.pathname + url.search, 301);
+	}
+	await next();
+});
+
 // ---- Redirecciones 301 (sitio anterior en WordPress, URLs antiguas de la v2, barras finales)
 app.use('*', async (c, next) => {
 	if (c.req.method === 'GET' || c.req.method === 'HEAD') {
